@@ -1,14 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Cake, Menu, X, ShieldAlert } from 'lucide-react';
+import { Cake, Menu, X, ShieldAlert, Lock, ShieldCheck } from 'lucide-react';
 
 interface NavbarProps {
   onNavClick: (sectionId: string) => void;
   activeSection: string;
   onAdminToggle: () => void;
   isAdminVisible: boolean;
+  isAdminAuthenticated?: boolean;
+  onLoginClick?: () => void;
 }
 
-export default function Navbar({ onNavClick, activeSection, onAdminToggle, isAdminVisible }: NavbarProps) {
+export default function Navbar({ 
+  onNavClick, 
+  activeSection, 
+  onAdminToggle, 
+  isAdminVisible,
+  isAdminAuthenticated,
+  onLoginClick
+}: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -22,7 +31,6 @@ export default function Navbar({ onNavClick, activeSection, onAdminToggle, isAdm
 
   const navItems = [
     { id: 'home', label: 'Home' },
-    { id: 'baking-section', label: 'Baking' },
     { id: 'builder', label: 'Build Cake' },
     { id: 'gallery', label: 'Gallery' },
     { id: 'about', label: 'About' },
@@ -53,7 +61,7 @@ export default function Navbar({ onNavClick, activeSection, onAdminToggle, isAdm
           </div>
           <div>
             <span className="font-display text-lg md:text-xl font-bold tracking-tight text-primary uppercase select-none block">
-              The Sweet Spot
+              Krish Dreamy Delight
             </span>
             <span className="text-[10px] font-sans text-on-surface-variant font-semibold tracking-widest block uppercase -mt-1">
               Gourmet Home Baking
@@ -84,9 +92,23 @@ export default function Navbar({ onNavClick, activeSection, onAdminToggle, isAdm
 
         {/* Quick action controls & Admin shortcut */}
         <div className="hidden md:flex items-center gap-3">
+          {!isAdminAuthenticated ? (
+            <button
+              onClick={onLoginClick}
+              className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10.5px] font-black tracking-wider uppercase rounded-full shadow-xs transition-all flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 duration-200 border border-rose-200/50"
+              id="desktop-login-button"
+            >
+              <Lock size={12} className="shrink-0" /> Owner Login
+            </button>
+          ) : (
+            <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 rounded-full flex items-center gap-1 select-none font-sans font-extrabold tracking-wide py-0.5">
+              <ShieldCheck size={11} className="shrink-0" /> Connected
+            </span>
+          )}
+
           <button
             onClick={onAdminToggle}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
               isAdminVisible 
                 ? 'bg-primary text-white shadow-sm' 
                 : 'bg-surface-variant/40 text-on-surface-variant hover:bg-primary-container/20 hover:text-primary border border-outline-variant/35'
@@ -107,6 +129,15 @@ export default function Navbar({ onNavClick, activeSection, onAdminToggle, isAdm
 
         {/* Mobile Toggle */}
         <div className="md:hidden flex items-center gap-2">
+          {!isAdminAuthenticated && onLoginClick && (
+            <button
+              onClick={onLoginClick}
+              className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-black tracking-wide uppercase rounded-full shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              id="mobile-login-button"
+            >
+              <Lock size={11} className="shrink-0" /> Login
+            </button>
+          )}
           <button
             onClick={onAdminToggle}
             className={`p-2 rounded-full transition-all ${

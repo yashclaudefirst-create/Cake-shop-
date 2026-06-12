@@ -52,10 +52,50 @@ export const STEP_NAMES = [
   "Review & Checkout"
 ];
 
+export interface CakeBuilderOptionItem {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  code?: string; // for colors
+}
+
+export interface CakeBuilderOptions {
+  sizes: CakeBuilderOptionItem[];
+  flavors: CakeBuilderOptionItem[];
+  colors: CakeBuilderOptionItem[];
+  dietary: CakeBuilderOptionItem[];
+  fillings: CakeBuilderOptionItem[];
+  toppings: CakeBuilderOptionItem[];
+  sweetness: CakeBuilderOptionItem[];
+  frostings: CakeBuilderOptionItem[];
+}
+
 export interface GalleryItem {
   id: string;
   title: string;
   category: string;
   image: string;
   description: string;
+}
+
+export interface WebsiteConfig {
+  heroBadge: string;
+  heroTitleCursive: string;
+  heroTitleGradient: string;
+  heroDescription: string;
+  aboutTag: string;
+  aboutTitle: string;
+  aboutSubtitle: string;
+  aboutMainTitle: string;
+  aboutDesc1: string;
+  aboutDesc2: string;
+  card1Title: string;
+  card1Desc: string;
+  card2Title: string;
+  card2Desc: string;
+  card3Title: string;
+  card3Desc: string;
+  card4Title: string;
+  card4Desc: string;
 }

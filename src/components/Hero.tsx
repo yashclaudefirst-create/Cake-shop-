@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowRight, Sparkles, Heart, Star, Award } from 'lucide-react';
+import { ArrowRight, Sparkles, Heart, Star, Award, Cake } from 'lucide-react';
+
+import { WebsiteConfig } from '../types';
 
 interface HeroProps {
   onNavClick: (sectionId: string) => void;
+  config?: WebsiteConfig;
 }
 
 interface SparkleItem {
@@ -12,7 +15,7 @@ interface SparkleItem {
   size: number;
 }
 
-export default function Hero({ onNavClick }: HeroProps) {
+export default function Hero({ onNavClick, config }: HeroProps) {
   const [sparkles, setSparkles] = useState<SparkleItem[]>([]);
 
   useEffect(() => {
@@ -50,20 +53,20 @@ export default function Hero({ onNavClick }: HeroProps) {
         <div className="text-center md:text-left space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full text-primary font-bold text-xs uppercase tracking-wider sticker-badge animate-bounce-slight shadow-sm hover:scale-105 transition-transform duration-200">
             <Award className="text-[#874e58]" size={15} />
-            <span className="font-display">FSSAI Certified Baker</span>
+            <span className="font-display">{config?.heroBadge || "FSSAI Certified Baker"}</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-glow select-none">
             <span className="text-primary font-cursive text-5xl sm:text-6xl lg:text-7xl block tracking-wide my-1">
-              Hand Made
+              {config?.heroTitleCursive || "Hand Made"}
             </span>
             <span className="shimmer-text bg-gradient-to-r from-primary via-secondary to-[#874e58] bg-clip-text text-transparent block">
-              With Pure Love 💕
+              {config?.heroTitleGradient || "With Pure Love"} <Heart className="inline-block fill-primary text-primary w-5 h-5 ml-1 align-middle" />
             </span>
           </h1>
 
           <p className="font-sans text-sm sm:text-base md:text-lg text-on-surface-variant max-w-md mx-auto md:mx-0 leading-relaxed">
-            <strong className="text-primary font-bold">The Sweet Spot</strong> is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter. 
+            {config?.heroDescription || "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter."}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-4">
@@ -145,11 +148,11 @@ export default function Hero({ onNavClick }: HeroProps) {
               className="w-full max-w-[280px] sm:max-w-[400px] md:max-w-[480px] h-auto object-contain animate-float drop-shadow-[0_25px_40px_rgba(135,78,88,0.3)]"
             />
             {/* Floating text bubbles to emulate interactive feedback */}
-            <div className="absolute top-4 right-4 bg-white/90 border border-[#ffb6c1] px-3.5 py-1.5 rounded-2xl shadow-sm text-xs font-bold text-primary sticker-badge">
-              🎂 Best Seller No. 1
+            <div className="absolute top-4 right-4 bg-white/90 border border-[#ffb6c1] px-3.5 py-1.5 rounded-2xl shadow-sm text-xs font-bold text-primary sticker-badge flex items-center gap-1">
+              <Cake size={13} className="text-primary shrink-0" /> Best Seller No. 1
             </div>
             <div className="absolute bottom-4 left-6 bg-white/90 border border-[#ffb6c1] px-3 py-1.5 rounded-2xl shadow-sm text-[11px] font-bold text-on-surface flex items-center gap-1.5 transform rotate-3">
-              🍓 Real Cream & Fruits
+              <Sparkles size={13} className="text-primary shrink-0 animate-pulse" /> Real Cream & Fruits
             </div>
           </div>
         </div>

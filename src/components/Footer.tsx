@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cake, ShieldCheck, Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { Cake, ShieldCheck, Heart, Mail, Phone, MapPin, Lock } from 'lucide-react';
 
 interface FooterProps {
   onAdminToggle: () => void;
@@ -23,7 +23,7 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
               <Cake size={16} className="stroke-[2.5]" />
             </div>
             <span className="font-display text-base font-bold tracking-tight text-primary uppercase">
-              The Sweet Spot
+              Krish Dreamy Delight
             </span>
           </div>
           <p className="font-sans text-[11px] text-on-surface-variant leading-relaxed max-w-xs font-medium">
@@ -67,7 +67,7 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
                   : 'text-on-surface-variant hover:text-primary'
               }`}
             >
-              🔐 Chef Owner Administration Board
+              <Lock size={12} className="text-primary shrink-0" /> Chef Owner Administration Board
             </button>
           </div>
         </div>
@@ -79,12 +79,12 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
           </h4>
           <div className="space-y-2 font-semibold text-[11px]">
             <div className="flex items-center gap-2"><MapPin size={13} className="text-primary" /> Connaught Outpost, Central New Delhi</div>
-            <div className="flex items-center gap-2"><Mail size={13} className="text-primary" /> orders@sweetspotbaking.com</div>
+            <div className="flex items-center gap-2"><Mail size={13} className="text-primary" /> orders@krishdreamydelight.com</div>
             <div className="flex items-center gap-2"><Phone size={13} className="text-primary" /> +91-98765-43210 (10 AM - 7 PM)</div>
           </div>
           
           <div className="pt-4 border-t border-primary/5 text-[10px] text-zinc-400 font-normal">
-            <p>© 2026 The Sweet Spot Home Bakery.</p>
+            <p>© 2026 Krish Dreamy Delight Home Bakery.</p>
             <p>Made with love & clean cow ghee. All rights reserved.</p>
           </div>
         </div>

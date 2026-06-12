@@ -2,55 +2,17 @@ import React, { useState } from 'react';
 import { GalleryItem } from '../types';
 import { Heart, Search, Eye, X, Star, Calendar } from 'lucide-react';
 
-export default function Gallery() {
+interface GalleryProps {
+  items?: GalleryItem[];
+}
+
+export default function Gallery({ items }: GalleryProps) {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [likedItems, setLikedItems] = useState<string[]>([]);
   const [zoomedItem, setZoomedItem] = useState<GalleryItem | null>(null);
 
-  const galleryItems: GalleryItem[] = [
-    {
-      id: "gal-1",
-      title: "Signature Strawberry Luxury Peak",
-      category: "Cakes",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCL7Lz3fGNOqtxv5Mtv2O9UKxXh3LiG5rGCbQqBEi0trMJiPxZejHF_g-hpT7E2dIcX2jGRiONAVvKyTp8hiMh2PTYQM-pMfBNuTmrkjE7fymm8a_VfI8A0LkclNyQ4pw6I1-KBvXOyOJN0RACYG1KTZhLlJzy7UMRJaq4-l1u9FC75fIR89IjLFqbCb4tgMVwD9nNAUX0YjKfgxptEmnKM-J-z0D5pJbqJVIzhN_6TTjS-H8Dlh1sKMsNrzhG6pHYIwUASCNlpifo",
-      description: "A gorgeous, elaborate double tier custom cake garnished with fresh handpicked strawberries, royal cream rosettes, and whimsical sugar butterflies."
-    },
-    {
-      id: "gal-2",
-      title: "Vivid Confetti Cupcakes",
-      category: "Special Cakes",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2nH6z8eHE0d3DYjSLpTJolZSLAEmJmzwyt_PE2J3ESXLCdtxVZUDm_wEs3GrzqltZxLVeMdrUEB1UA6GroETcb3fYOGQyOo0-gcOSELxqdLPzpkPSyKExQlULAD6PZIWDd8PcUhMp9ZwPRXulkQoJUDhecEjYre7LR63xirPtB-iwOZc1KQKqjsBeAyOH053CNqwHcJGsTgycdbK9NHWrrEtLhs6-qLOVvq8SJeoS4gJe4-Zugp8EWpcBidQLzSx6Yg9KLUq5_0M",
-      description: "Miniature sponge fluffy cupcakes topped with creamy strawberry frosting icing and premium edible crystal sprinkles."
-    },
-    {
-      id: "gal-3",
-      title: "Gooey Belgian Walnut Brownies",
-      category: "Brownies",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDg9Lr3k2hwBV9__-xXoWuJVpHRQ1b8W4ZHN-MK1bmNn092Tl58KNaTb2bRLzQIfchxucorWhJLbmj5hqCguH1M9fY76p5MKlFm1WEEp8BSljnyKqZT7MtIjwpn_GMHYmgtbwRxqczzLy4UxDFICAj8eWNG2gb1lPdR1bEqz5B3BZBYJ8MICSeoFtPHOPJyU_XDig8sf_nLuiDkKHzjbTFHJPwL_nRcKa5EaYMsk2DmOGSokyhYjkaCtaxJnTIGN0_7alk-_xx0XXQ",
-      description: "Moist chocolate square bites crafted from rich organic 74% dark chocolate, butter cream, and roasted Kashmiri walnuts."
-    },
-    {
-      id: "gal-4",
-      title: "Esterhazy Custard Milfoil",
-      category: "Special Cakes",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUZC1h1eqrOD7tUOhKag3aVnSBhrJGe9u_kIWX49md6TGh3yOI_1Z6AqMc68QX61twozVGU93Uniwjs9IjKnBr7f3r-wrWo0JK8yMvLjclSS2_EE59a0sG8zuUcbQ0Qbjys18NwIbf3By7JRLnOhkzYwi4u7srpcwllVy7BW9MdD5bDrSOY-4-ktzUBwoo5iJbjhftnYCwOyVxsqTJX6X9loF34z88jsSMajyQ34Og4DU2C_uGcNN0XOgv--uTkTgMejBUZmJ45uI",
-      description: "Multi-layered delicate puff pastry stuffed with Madagascar custard pudding and topped with white chocolate cobweb glazes."
-    },
-    {
-      id: "gal-5",
-      title: "Custom Birthday Macaron Castle",
-      category: "Cakes",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC1fZMjX_oG4jCntDV434e2IR035wogrWMak7a_X4mHryhMtp-nv-ThXwThb1oj-lWVjdBD-comvTsnrYmYPUhO0Th52JuNNYPi8zCRfXpFWu0cS2pUlFdKd1A2PzAxv7edkCmgc_Wn-HAkKip3LkYFCCV7OKTDn0mC6ewvOXKbi1WUAAkVW5G41csEdG1zCYhFgTdscsGN5iwXJ3SyAHLV2tKrbiBoYcuSj6P1_GiZO4JWb-UYjw2jP4CPi1HshhiJt4j8NQbbkek",
-      description: "Three tier customized cake loaded with authentic French almond flour macarons, edible gold sprinkles, and a customized Happy Birthday topper."
-    },
-    {
-      id: "gal-6",
-      title: "Artisanal High Tea Bakery Assortments",
-      category: "Brownies",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC6gUk4Lax0y7Nppc6RIvUkd91fDIJVRF5EnwNUD1-1Nsz66PANG9fwmUU3eC1E-CmysDUOfOTn4M28O9Tn9GJsXqqL6psXnoD3hNi_wtjHTrLSQ7fOgIaXvnJJ0wJ-CceZNVOdOfrzfJjKaKTR2Fdh0-Gai2PhNEAvEg3vUIeViiqnfA4Gc2fE7RUBtu8poemZWH3rGKy9MTtFcKjWngqmtHsUyFYSZVv6FPA_FDHCd9YK6__kYFb4fNNb0LNkMbktgHeIvBUCcnk",
-      description: "A signature platter of custom-baked products including fudge slices, red velvet pastry bites, chocolate macaron treats, and butter cookies."
-    }
-  ];
+  const galleryItems = items || [];
+
 
   const filters = ['All', 'Cakes', 'Brownies', 'Special Cakes'];
 

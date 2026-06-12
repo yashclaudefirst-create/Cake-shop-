@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CakeCustomization, CustomerDetails, Order } from '../types';
+import { CakeCustomization, CustomerDetails, Order, CakeBuilderOptions } from '../types';
 import { 
   Cake as CakeIcon, 
   ChevronLeft, 
@@ -18,30 +18,14 @@ import {
   Phone, 
   MapPin, 
   Truck, 
-  Store 
+  Store,
+  MessageSquare
 } from 'lucide-react';
 
 interface CakeBuilderProps {
   onOrderAdded: (newOrder: Order) => void;
+  builderOptions?: CakeBuilderOptions;
 }
-
-const INITIAL_CUSTOMIZATION: CakeCustomization = {
-  category: 'cake',
-  size: 'Medium (1.0kg) - 8-12 servings',
-  baseFlavor: 'Rich Belgian Chocolate',
-  baseColor: '#ffb6c1',
-  baseColorName: 'Millennial Pink',
-  dietary: 'Standard Cream Base',
-  fillings: 'Belgian Fudge',
-  sweetness: 'Standard Sweetness',
-  frostingType: 'Light Whipped Frosting',
-  toppings: ['Rainbow Sprinkles'],
-  occasion: 'Birthday Celebration',
-  messageOnCake: '',
-  deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
-  deliveryTimeSlot: 'Evening Twilight (06:00 PM - 09:00 PM)',
-  specialInstructions: ''
-};
 
 const INITIAL_CUSTOMER: CustomerDetails = {
   name: '',
@@ -51,50 +35,125 @@ const INITIAL_CUSTOMER: CustomerDetails = {
   deliveryType: 'pickup'
 };
 
-export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
+export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilderProps) {
+  // Safe fallback to match original values if no custom ones are stored
+  const options = builderOptions || {
+    sizes: [
+      { id: 'sz-1', name: 'Small (0.5kg) - 4-6 servings', description: 'Cute mini birthday standard size', price: 0 },
+      { id: 'sz-2', name: 'Medium (1.0kg) - 8-12 servings', description: 'Perfect family parlor gathering', price: 250 },
+      { id: 'sz-3', name: 'Large (2.0kg) - 16-20 servings', description: 'Festive office & larger groups', price: 550 },
+      { id: 'sz-4', name: 'Double Tier Luxury (3.0kg+) - 25-30 servings', description: 'Grand showstopper custom stacked tiers', price: 1050 }
+    ],
+    flavors: [
+      { id: 'fl-1', name: 'Classic Madagascar Vanilla Butter', price: 0 },
+      { id: 'fl-2', name: 'Rich Belgian Fudge Chocolate', price: 100 },
+      { id: 'fl-3', name: 'Velvety Red Velvet Cocoa', price: 150 },
+      { id: 'fl-4', name: 'Creamcheese Salted Butterscotch', price: 80 },
+      { id: 'fl-5', name: 'Summer Fresh Strawberry Cream', price: 80 },
+      { id: 'fl-6', name: 'Summer Juicy Red Watermelon', price: 180 }
+    ],
+    colors: [
+      { id: 'cl-1', name: 'Millennial Pink', code: '#ffb6c1', price: 0 },
+      { id: 'cl-2', name: 'Belgian Charcoal Fudge', code: '#4a3538', price: 0 },
+      { id: 'cl-3', name: 'Golden Banana Cream', code: '#e9c400', price: 0 },
+      { id: 'cl-4', name: 'Lavender Dreams', code: '#d8b4fe', price: 0 },
+      { id: 'cl-5', name: 'Mint Meadow', code: '#a7f3d0', price: 0 },
+      { id: 'cl-6', name: 'Emerald Watermelon Rind', code: '#2ecc71', price: 0 },
+      { id: 'cl-7', name: 'Pure Snow White', code: '#ffffff', price: 0 }
+    ],
+    dietary: [
+      { id: 'dt-1', name: 'Standard Cream Base', description: 'Fresh farm eggs and rich dairy cream', price: 0 },
+      { id: 'dt-2', name: '100% Pure Eggless Sponge', description: 'No eggs used inside workspace', price: 50 },
+      { id: 'dt-3', name: 'Certified Gluten-Free Base', description: 'Using organic almond or coconut starch', price: 120 },
+      { id: 'dt-4', name: 'Organic Vegan Dairy-Free', description: 'Using coconut butter and almond milk cream', price: 150 },
+      { id: 'dt-5', name: 'Healthy Sugar-Free Stevia Blend', description: 'Zero added processed refine sugar', price: 180 }
+    ],
+    fillings: [
+      { id: 'fi-1', name: 'Belgian Fudge', price: 80 },
+      { id: 'fi-2', name: 'Strawberry Cream', price: 90 },
+      { id: 'fi-3', name: 'Salted Caramel', price: 80 },
+      { id: 'fi-4', name: 'Nutella Blast', price: 120 },
+      { id: 'fi-5', name: 'Cookies n Cream', price: 70 },
+      { id: 'fi-6', name: 'Standard Cream Paste', price: 0 }
+    ],
+    toppings: [
+      { id: 'tp-1', name: 'Rainbow Sprinkles', price: 30 },
+      { id: 'tp-2', name: 'French Macarons & Organic Berries', price: 150 },
+      { id: 'tp-3', name: 'Edible 24k Gold Foil flakes', price: 200 },
+      { id: 'tp-4', name: 'Chocolate Ganache Drip', price: 60 },
+      { id: 'tp-5', name: 'Artisan Whipped Sugar Flowers', price: 80 },
+      { id: 'tp-6', name: 'Magic Edible Butterflies', price: 100 }
+    ],
+    sweetness: [
+      { id: 'sw-1', name: 'Balanced (Muted Sweetness)', description: 'Keeps cream taste primary with very mild sugars', price: 0 },
+      { id: 'sw-2', name: 'Standard Sweetness', description: 'Traditional perfect balanced sweet index', price: 0 },
+      { id: 'sw-3', name: 'Extra Sweet Richness', description: 'Bold sugary pop, perfect for chocoholics', price: 0 },
+      { id: 'sw-4', name: 'Stevia / Monk Fruit Sweetener', description: 'No spikes! Organic premium leaf crystals', price: 40 }
+    ],
+    frostings: [
+      { id: 'fr-1', name: 'Light Whipped Frosting', description: 'Fluffy air whipped sugar cream', price: 0 },
+      { id: 'fr-2', name: 'Swiss Meringue Buttercream', description: 'Rich velvety luxury finish', price: 100 },
+      { id: 'fr-3', name: 'New York Cream Cheese Frosting', description: 'Tangy dessert pastry favorite', price: 120 },
+      { id: 'fr-4', name: 'Rigid Rolled Fondant Sheet', description: 'Sleek custom sculpted cake finish', price: 150 }
+    ]
+  };
+
+  const getInitialCustomization = (): CakeCustomization => ({
+    category: 'cake',
+    size: options.sizes[1]?.name || options.sizes[0]?.name || '',
+    baseFlavor: options.flavors[0]?.name || '',
+    baseColor: options.colors[0]?.code || '#ffb6c1',
+    baseColorName: options.colors[0]?.name || 'Millennial Pink',
+    dietary: options.dietary[0]?.name || '',
+    fillings: options.fillings[0]?.name || '',
+    sweetness: options.sweetness[1]?.name || options.sweetness[0]?.name || '',
+    frostingType: options.frostings[0]?.name || '',
+    toppings: options.toppings[0] ? [options.toppings[0].name] : [],
+    occasion: 'Birthday Celebration',
+    messageOnCake: '',
+    deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
+    deliveryTimeSlot: 'Evening Twilight (06:00 PM - 09:00 PM)',
+    specialInstructions: ''
+  });
+
   const [step, setStep] = useState(1);
-  const [customization, setCustomization] = useState<CakeCustomization>(INITIAL_CUSTOMIZATION);
+  const [customization, setCustomization] = useState<CakeCustomization>(getInitialCustomization);
   const [customer, setCustomer] = useState<CustomerDetails>(INITIAL_CUSTOMER);
   const [validationError, setValidationError] = useState('');
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
-  // Pricing calculation helper
+  // Pricing calculation helper linked completely to dynamic builderOptions
   const calculatePrice = (): number => {
     let base = customization.category === 'cake' ? 500 : 350;
 
     // Size pricing
-    if (customization.size.includes('Small')) base += 0;
-    else if (customization.size.includes('Medium')) base += 250;
-    else if (customization.size.includes('Large')) base += 550;
-    else if (customization.size.includes('Double Tier')) base += 1050;
+    const sizeOpt = options.sizes.find(s => s.name === customization.size);
+    if (sizeOpt) base += sizeOpt.price;
 
     // Flavor sponging pricing
-    if (customization.baseFlavor.includes('Belgian Chocolate')) base += 100;
-    else if (customization.baseFlavor.includes('Red Velvet')) base += 150;
-    else if (customization.baseFlavor.includes('Butterscotch')) base += 80;
-    else if (customization.baseFlavor.includes('Strawberry')) base += 80;
+    const flavorOpt = options.flavors.find(f => f.name === customization.baseFlavor);
+    if (flavorOpt) base += flavorOpt.price;
 
     // Dietary
-    if (customization.dietary.includes('Eggless')) base += 50;
-    else if (customization.dietary.includes('Gluten-Free')) base += 120;
-    else if (customization.dietary.includes('Vegan')) base += 150;
-    else if (customization.dietary.includes('Sugar-Free')) base += 180;
+    const dietaryOpt = options.dietary.find(d => d.name === customization.dietary);
+    if (dietaryOpt) base += dietaryOpt.price;
 
     // Fillings
-    if (customization.fillings.includes('Belgian Fudge')) base += 80;
-    else if (customization.fillings.includes('Strawberry Cream')) base += 90;
-    else if (customization.fillings.includes('Salted Caramel')) base += 80;
-    else if (customization.fillings.includes('Nutella')) base += 120;
-    else if (customization.fillings.includes('Cookies')) base += 70;
+    const fillingsOpt = options.fillings.find(f => f.name === customization.fillings);
+    if (fillingsOpt) base += fillingsOpt.price;
+
+    // Sweetness
+    const sweetnessOpt = options.sweetness.find(sw => sw.name === customization.sweetness);
+    if (sweetnessOpt) base += sweetnessOpt.price;
+
+    // Frosting
+    const frostingOpt = options.frostings.find(fr => fr.name === customization.frostingType);
+    if (frostingOpt) base += frostingOpt.price;
 
     // Toppings cumulative sum
     customization.toppings.forEach(top => {
-      if (top.includes('Sprinkles')) base += 30;
-      else if (top.includes('Macarons')) base += 150;
-      else if (top.includes('Gold Foil')) base += 200;
-      else if (top.includes('Chocolate Drip')) base += 60;
-      else if (top.includes('Sugar Flowers')) base += 80;
-      else if (top.includes('Butterflies')) base += 100;
+      const toppingOpt = options.toppings.find(t => t.name === top);
+      if (toppingOpt) base += toppingOpt.price;
     });
 
     // Special slots (e.g. Midnight)
@@ -109,7 +168,6 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
   // Step Navigators
   const nextStep = () => {
     if (step === 13) {
-      // Validate customer info before moving to checkout review screen
       if (!customer.name.trim()) return setValidationError('Please provide your name.');
       if (!customer.email.trim() || !customer.email.includes('@')) return setValidationError('Please enter a valid email address.');
       if (!customer.phone.trim() || customer.phone.length < 8) return setValidationError('Please enter a valid phone contact.');
@@ -135,7 +193,7 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
   };
 
   const resetBuilder = () => {
-    setCustomization(INITIAL_CUSTOMIZATION);
+    setCustomization(getInitialCustomization());
     setCustomer(INITIAL_CUSTOMER);
     setStep(1);
     setSubmittedOrder(null);
@@ -204,29 +262,59 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
               {submittedOrder.customization.messageOnCake && (
                 <div className="py-1.5 flex justify-between text-pink-700 italic"><span className="text-on-surface-variant">Topper Inscription:</span> <span>"{submittedOrder.customization.messageOnCake}"</span></div>
               )}
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Dispatch:</span> <span className="font-bold">{submittedOrder.customer.deliveryType === 'delivery' ? '🚗 Home Delivery' : '📦 Studio Self-Pickup'}</span></div>
+              <div className="py-1.5 flex justify-between">
+                <span className="text-on-surface-variant">Dispatch:</span> 
+                <span className="font-bold flex items-center gap-1">
+                  {submittedOrder.customer.deliveryType === 'delivery' ? (
+                    <>
+                      <Truck size={13} className="text-primary" />
+                      <span>Home Delivery</span>
+                    </>
+                  ) : (
+                    <>
+                      <Store size={13} className="text-primary" />
+                      <span>Studio Self-Pickup</span>
+                    </>
+                  )}
+                </span>
+              </div>
               <div className="py-2 flex justify-between text-base font-bold text-primary pt-3"><span className="font-display uppercase tracking-wider text-xs">Settled Total:</span> <span>₹{submittedOrder.totalPrice}</span></div>
             </div>
 
-            <div className="pt-2 flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={resetBuilder}
-                className="flex-1 py-3 bg-primary text-white text-xs font-bold uppercase rounded-full shadow-md hover:bg-[#6b3741] transition-all cursor-pointer"
+            <div className="pt-2 space-y-3">
+              <a
+                href={(() => {
+                  const orderDetails = `Hi Krish Dreamy Delight! 🎂\n\nI just placed a custom cake order on your website:\n*Order ID:* ${submittedOrder.id}\n*Name:* ${submittedOrder.customer.name}\n*Cake Style:* ${submittedOrder.customization.category.toUpperCase()} (${submittedOrder.customization.size})\n*Base Flavor:* ${submittedOrder.customization.baseFlavor}\n*Frosting Shade:* ${submittedOrder.customization.baseColorName}\n*Frosting Inscription:* "${submittedOrder.customization.messageOnCake || 'None'}"\n*Dispatch:* ${submittedOrder.customer.deliveryType === 'delivery' ? 'Home Delivery' : 'Self Pickup'}\n*TotalPrice:* ₹${submittedOrder.totalPrice}\n\nPlease confirm my slot booking! Thank you. ✨`;
+                  return `https://wa.me/919876543210?text=${encodeURIComponent(orderDetails)}`;
+                })()}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase rounded-full shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer text-center"
               >
-                Bake Another Custom Order
-              </button>
-              <button
-                onClick={() => {
-                  const dashboard = document.getElementById('admin-dashboard');
-                  if (dashboard) {
-                    dashboard.classList.remove('hidden');
-                    dashboard.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }}
-                className="flex-1 py-3 bg-[#fff8f5] text-primary border border-primary/20 text-xs font-bold uppercase rounded-full hover:bg-primary-container/10 transition-all"
-              >
-                Inspect Live Order Queue
-              </button>
+                <MessageSquare size={14} className="stroke-[2.5]" />
+                Direct Message Order details to Baker (WhatsApp DM)
+              </a>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={resetBuilder}
+                  className="flex-1 py-3 bg-primary text-white text-xs font-bold uppercase rounded-full shadow-md hover:bg-[#6b3741] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  Bake Another Custom Order
+                </button>
+                <button
+                  onClick={() => {
+                    const dashboard = document.getElementById('admin-dashboard');
+                    if (dashboard) {
+                      dashboard.classList.remove('hidden');
+                      dashboard.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="flex-1 py-3 bg-[#fff8f5] text-primary border border-primary/20 text-xs font-bold uppercase rounded-full hover:bg-primary-container/10 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                >
+                  Inspect Live Order Queue
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -329,14 +417,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Calibrate the pound weight to fit your guest list perfectly.
                     </p>
                     <div className="grid grid-cols-1 gap-3 pt-2">
-                      {[
-                        { name: 'Small (0.5kg) - 4-6 servings', desc: 'Cute mini birthday standard size', price: '₹0' },
-                        { name: 'Medium (1.0kg) - 8-12 servings', desc: 'Perfect family parlor gathering', price: '+₹250' },
-                        { name: 'Large (2.0kg) - 16-20 servings', desc: 'Festive office & larger groups', price: '+₹550' },
-                        { name: 'Double Tier Luxury (3.0kg+) - 25-30 servings', desc: 'Grand showstopper custom stacked tiers', price: '+₹1050' },
-                      ].map((sizeItem) => (
+                      {options.sizes.map((sizeItem) => (
                         <button
-                          key={sizeItem.name}
+                          key={sizeItem.id}
                           onClick={() => setCustomization({ ...customization, size: sizeItem.name })}
                           className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
                             customization.size === sizeItem.name
@@ -346,9 +429,13 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                         >
                           <div>
                             <span className="font-display text-xs text-primary block">{sizeItem.name}</span>
-                            <span className="text-[10px] text-on-surface-variant font-normal block">{sizeItem.desc}</span>
+                            {sizeItem.description && (
+                              <span className="text-[10px] text-on-surface-variant font-normal block">{sizeItem.description}</span>
+                            )}
                           </div>
-                          <span className="text-xs text-primary font-bold">{sizeItem.price}</span>
+                          <span className="text-xs text-primary font-bold">
+                            {sizeItem.price === 0 ? '₹0' : `+₹${sizeItem.price}`}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -363,15 +450,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Our signature recipes are whipped using real cream butter and luxury organic Madagascar vanilla pods or Belgian cocoa.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {[
-                        { name: 'Classic Madagascar Vanilla Butter', cost: '+₹0' },
-                        { name: 'Rich Belgian Fudge Chocolate', cost: '+₹100' },
-                        { name: 'Velvety Red Velvet Cocoa', cost: '+₹150' },
-                        { name: 'Creamcheese Salted Butterscotch', cost: '+₹80' },
-                        { name: 'Summer Fresh Strawberry Cream', cost: '+₹80' }
-                      ].map((flav) => (
+                      {options.flavors.map((flav) => (
                         <button
-                          key={flav.name}
+                          key={flav.id}
                           onClick={() => setCustomization({ ...customization, baseFlavor: flav.name })}
                           className={`p-4 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
                             customization.baseFlavor === flav.name
@@ -380,7 +461,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                           }`}
                         >
                           <span className="font-display text-xs font-bold text-primary">{flav.name}</span>
-                          <span className="text-[10px] text-on-surface-variant">{flav.cost}</span>
+                          <span className="text-[10px] text-on-surface-variant">
+                            {flav.price === 0 ? '₹0' : `+₹${flav.price}`}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -395,17 +478,10 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       This changes the visual frosting layer color in the live graphic preview panel!
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                      {[
-                        { name: 'Millennial Pink', code: '#ffb6c1' },
-                        { name: 'Belgian Charcoal Fudge', code: '#4a3538' },
-                        { name: 'Golden Banana Cream', code: '#e9c400' },
-                        { name: 'Lavender Dreams', code: '#d8b4fe' },
-                        { name: 'Mint Meadow', code: '#a7f3d0' },
-                        { name: 'Pure Snow White', code: '#ffffff' }
-                      ].map((col) => (
+                      {options.colors.map((col) => (
                         <button
-                          key={col.name}
-                          onClick={() => setCustomization({ ...customization, baseColor: col.code, baseColorName: col.name })}
+                          key={col.id}
+                          onClick={() => setCustomization({ ...customization, baseColor: col.code || '#ffb6c1', baseColorName: col.name })}
                           className={`p-3.5 rounded-2xl border-2 text-center flex flex-col items-center gap-2 transition-all cursor-pointer ${
                             customization.baseColorName === col.name
                               ? 'border-primary bg-primary-container/20 font-bold scale-[1.03]'
@@ -414,7 +490,7 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                         >
                           <div 
                             className="w-10 h-10 rounded-full border border-primary/20 shadow-inner"
-                            style={{ backgroundColor: col.code }}
+                            style={{ backgroundColor: col.code || '#ffb6c1' }}
                           />
                           <span className="text-[10px] text-on-surface font-semibold truncate block w-full">
                             {col.name}
@@ -433,15 +509,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       We offer fully isolated sanitary workstations for special baker requests (eggless sponge, zero gluten flour blends).
                     </p>
                     <div className="grid grid-cols-1 gap-2.5 pt-1">
-                      {[
-                        { name: 'Standard Cream Base', desc: 'Fresh farm eggs and rich dairy cream', cost: '₹0' },
-                        { name: '100% Pure Eggless Sponge', desc: 'No eggs used inside workspace', cost: '+₹50' },
-                        { name: 'Certified Gluten-Free Base', desc: 'Using organic almond or coconut starch', cost: '+₹120' },
-                        { name: 'Organic Vegan Dairy-Free', desc: 'Using coconut butter and almond milk cream', cost: '+₹150' },
-                        { name: 'Healthy Sugar-Free Stevia Blend', desc: 'Zero added processed refine sugar', cost: '+₹180' }
-                      ].map((diet) => (
+                      {options.dietary.map((diet) => (
                         <button
-                          key={diet.name}
+                          key={diet.id}
                           onClick={() => setCustomization({ ...customization, dietary: diet.name })}
                           className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
                             customization.dietary === diet.name
@@ -451,9 +521,13 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                         >
                           <div>
                             <span className="font-display text-xs font-bold text-primary block">{diet.name}</span>
-                            <span className="text-[10px] text-on-surface-variant block">{diet.desc}</span>
+                            {diet.description && (
+                              <span className="text-[10px] text-on-surface-variant block">{diet.description}</span>
+                            )}
                           </div>
-                          <span className="text-xs text-primary font-bold">{diet.cost}</span>
+                          <span className="text-xs text-primary font-bold">
+                            {diet.price === 0 ? '₹0' : `+₹${diet.price}`}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -468,16 +542,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Gourmet premium fillings stuffed cleanly between sponge cake bread decks.
                     </p>
                     <div className="grid grid-cols-2 gap-3 pt-1">
-                      {[
-                        { name: 'Belgian Fudge', cost: '+₹80' },
-                        { name: 'Strawberry Cream', cost: '+₹90' },
-                        { name: 'Salted Caramel', cost: '+₹80' },
-                        { name: 'Nutella Blast', cost: '+₹120' },
-                        { name: 'Cookies n Cream', cost: '+₹70' },
-                        { name: 'Standard Cream Paste', cost: '+₹0' }
-                      ].map((fil) => (
+                      {options.fillings.map((fil) => (
                         <button
-                          key={fil.name}
+                          key={fil.id}
                           onClick={() => setCustomization({ ...customization, fillings: fil.name })}
                           className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all cursor-pointer ${
                             customization.fillings === fil.name
@@ -486,7 +553,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                           }`}
                         >
                           <span className="font-display text-xs text-primary">{fil.name}</span>
-                          <span className="text-[10px] text-on-surface-variant font-semibold">{fil.cost}</span>
+                          <span className="text-[10px] text-on-surface-variant font-semibold">
+                            {fil.price === 0 ? '₹0' : `+₹${fil.price}`}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -501,14 +570,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Choose how much sugar or stevia sweet index to apply.
                     </p>
                     <div className="grid grid-cols-1 gap-3 pt-2">
-                      {[
-                        { name: 'Balanced (Muted Sweetness)', desc: 'Keeps cream taste primary with very mild sugars' },
-                        { name: 'Standard Sweetness', desc: 'Traditional perfect balanced sweet index' },
-                        { name: 'Extra Sweet Richness', desc: 'Bold sugary pop, perfect for chocoholics (+₹0)' },
-                        { name: 'Stevia / Monk Fruit Sweetener', desc: 'No spikes! Organic premium leaf crystals (+₹40)' }
-                      ].map((swt) => (
+                      {options.sweetness.map((swt) => (
                         <button
-                          key={swt.name}
+                          key={swt.id}
                           onClick={() => setCustomization({ ...customization, sweetness: swt.name })}
                           className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                             customization.sweetness === swt.name
@@ -516,8 +580,19 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                               : 'border-outline-variant/50 bg-white/50'
                           }`}
                         >
-                          <span className="font-display text-xs font-bold text-primary block">{swt.name}</span>
-                          <span className="text-[10px] text-on-surface-variant block">{swt.desc}</span>
+                          <div className="flex justify-between items-center w-full">
+                            <div>
+                              <span className="font-display text-xs font-bold text-primary block">{swt.name}</span>
+                              {swt.description && (
+                                <span className="text-[10px] text-on-surface-variant block">{swt.description}</span>
+                              )}
+                            </div>
+                            {swt.price > 0 && (
+                              <span className="text-xs font-bold text-primary shrink-0 ml-2">
+                                +₹{swt.price}
+                              </span>
+                            )}
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -532,14 +607,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Swiss buttercreams provide heavy piping options while whipped cream is fluffy and feather-light.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {[
-                        { name: 'Light Whipped Frosting', desc: 'Fluffy air whipped sugar cream', price: '+₹0' },
-                        { name: 'Swiss Meringue Buttercream', desc: 'Rich velvety luxury finish', price: '+₹100' },
-                        { name: 'New York Cream Cheese Frosting', desc: 'Tangy dessert pastry favorite', price: '+₹120' },
-                        { name: 'Rigid Rolled Fondant Sheet', desc: 'Sleek custom sculpted cake finish', price: '+₹150' },
-                      ].map((fs) => (
+                      {options.frostings.map((fs) => (
                         <button
-                          key={fs.name}
+                          key={fs.id}
                           onClick={() => setCustomization({ ...customization, frostingType: fs.name })}
                           className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all cursor-pointer ${
                             customization.frostingType === fs.name
@@ -549,9 +619,13 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                         >
                           <div>
                             <span className="font-display text-xs font-bold text-primary block">{fs.name}</span>
-                            <span className="text-[10px] text-on-surface-variant block">{fs.desc}</span>
+                            {fs.description && (
+                              <span className="text-[10px] text-on-surface-variant block">{fs.description}</span>
+                            )}
                           </div>
-                          <span className="text-xs text-primary font-bold mt-2 block">{fs.price}</span>
+                          <span className="text-xs text-primary font-bold mt-2 block">
+                            {fs.price === 0 ? '₹0' : `+₹${fs.price}`}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -571,18 +645,11 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       Decorate the top and side panels! Watch stars, berries, and butterflies appear on the live review cake.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {[
-                        { name: 'Rainbow Sprinkles', cost: '+₹30' },
-                        { name: 'French Macarons & Organic Berries', cost: '+₹150' },
-                        { name: 'Edible 24k Gold Foil flakes', cost: '+₹200' },
-                        { name: 'Chocolate Ganache Drip', cost: '+₹60' },
-                        { name: 'Artisan Whipped Sugar Flowers', cost: '+₹80' },
-                        { name: 'Magic Edible Butterflies', cost: '+₹100' }
-                      ].map((top) => {
+                      {options.toppings.map((top) => {
                         const isChosen = customization.toppings.includes(top.name);
                         return (
                           <button
-                            key={top.name}
+                            key={top.id}
                             onClick={() => handleToppingToggle(top.name)}
                             className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
                               isChosen
@@ -591,7 +658,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                             }`}
                           >
                             <span className="font-display text-xs text-primary">{top.name}</span>
-                            <span className="text-[10px] text-on-surface-variant font-bold">{top.cost}</span>
+                            <span className="text-[10px] text-on-surface-variant font-bold">
+                              {top.price === 0 ? '₹0' : `+₹${top.price}`}
+                            </span>
                           </button>
                         );
                       })}
@@ -897,7 +966,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                         {/* Buttercream layer line ring */}
                         <div className="w-full h-1 bg-white/50 absolute top-1/2" />
                         <div className="absolute -top-3.5 flex gap-1 animate-pulse">
-                          🍒🍓🍒
+                          <Sparkles className="text-pink-300 w-3.5 h-3.5" />
+                          <Sparkles className="text-amber-300 w-3.5 h-3.5" />
+                          <Sparkles className="text-pink-300 w-3.5 h-3.5" />
                         </div>
                       </div>
                     )}
@@ -923,11 +994,11 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       <div className="w-full h-1.5 bg-white/70 absolute top-[43%] translate-y-[-50%]" />
 
                       {/* Sparkles, Berries, Toppings stacked overlays on active preview cylinder */}
-                      <div className="absolute inset-x-2 bottom-4 flex justify-around pointer-events-none">
-                        {customization.toppings.includes('French Macarons & Organic Berries') && <span className="text-lg">🍓</span>}
-                        {customization.toppings.includes('Magic Edible Butterflies') && <span className="text-md animate-bounce">🦋</span>}
-                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <span className="text-base">🌸</span>}
-                        {customization.toppings.includes('Edible 24k Gold Foil flakes') && <span className="text-xs text-[#e9c400] font-bold">✨</span>}
+                      <div className="absolute inset-x-2 bottom-5 flex justify-around pointer-events-none">
+                        {customization.toppings.includes('French Macarons & Organic Berries') && <Sparkles size={16} className="text-rose-500 fill-rose-300" />}
+                        {customization.toppings.includes('Magic Edible Butterflies') && <Sparkles size={16} className="text-indigo-400 animate-bounce" />}
+                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <Sparkles size={16} className="text-pink-400" />}
+                        {customization.toppings.includes('Edible 24k Gold Foil flakes') && <Sparkles size={16} className="text-[#e9c400] font-bold fill-current" />}
                       </div>
 
                       {/* Personal Text message on cake base */}
@@ -952,9 +1023,9 @@ export default function CakeBuilder({ onOrderAdded }: CakeBuilderProps) {
                       )}
 
                       <div className="flex justify-around">
-                        {customization.toppings.includes('French Macarons & Organic Berries') && <span className="text-sm">🍓</span>}
-                        {customization.toppings.includes('Rainbow Sprinkles') && <span className="text-xs">✨✨</span>}
-                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <span className="text-xs">🌸</span>}
+                        {customization.toppings.includes('French Macarons & Organic Berries') && <Sparkles size={12} className="text-rose-500 fill-rose-300 inline" />}
+                        {customization.toppings.includes('Rainbow Sprinkles') && <Sparkles size={12} className="text-amber-500 inline animate-spin-slow" />}
+                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <Sparkles size={12} className="text-pink-400 inline" />}
                       </div>
                       <div className="text-center font-display text-[9px] font-bold text-[#ffb6c1] bg-[#874e58]/80 rounded p-1 max-w-[100px] mx-auto block z-20">
                         Premium Fudge Box

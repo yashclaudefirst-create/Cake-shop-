@@ -1,6 +1,6 @@
 {
-  "name": "The Sweet Spot",
-  "description": "An elegant, interactive custom cake builder and gourmet bakery menu showcase for The Sweet Spot Home Baking.",
+  "name": "Krish Dreamy Delight",
+  "description": "An elegant, interactive custom cake builder, baking animator, and gourmet bakery showcase for Krish Dreamy Delight Home Baking.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
