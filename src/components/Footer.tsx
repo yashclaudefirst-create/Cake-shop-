@@ -26,9 +26,10 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
               Krish Dreamy Delight
             </span>
           </div>
-          <p className="font-sans text-[11px] text-on-surface-variant leading-relaxed max-w-xs font-medium">
-            We craft customized high-fidelity cupcakes, multilayered frosted celebration cakes, and loaded brownies. Built cleanly to order with genuine farm-fresh butter and organic local berries.
-          </p>
+          <div className="space-y-1 text-on-surface-variant leading-normal">
+            <p className="font-display font-bold text-xs text-secondary">"Hand Made With Love 💕"</p>
+            <p className="font-sans text-[11px] font-semibold italic text-primary">"ChOoSy BaKiNg | Home Baker"</p>
+          </div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full text-primary border border-primary/10 shadow-xs scale-95 origin-left">
             <ShieldCheck size={14} className="stroke-[2.5]" />
             <span className="font-sans text-[9px] uppercase tracking-wider font-bold">FSSAI Certified Slab</span>
@@ -80,12 +81,12 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
           <div className="space-y-2 font-semibold text-[11px]">
             <div className="flex items-center gap-2"><MapPin size={13} className="text-primary" /> Connaught Outpost, Central New Delhi</div>
             <div className="flex items-center gap-2"><Mail size={13} className="text-primary" /> orders@krishdreamydelight.com</div>
-            <div className="flex items-center gap-2"><Phone size={13} className="text-primary" /> +91-98765-43210 (10 AM - 7 PM)</div>
+            <div className="flex items-center gap-2"><Phone size={13} className="text-primary" /> WhatsApp: +91 98656 21880</div>
+            <div className="flex items-center gap-2"><span className="text-primary font-bold text-[13px] leading-none ml-[2px]">@</span> Instagram: @krish_dreamy_delights</div>
           </div>
           
           <div className="pt-4 border-t border-primary/5 text-[10px] text-zinc-400 font-normal">
-            <p>© 2026 Krish Dreamy Delight Home Bakery.</p>
-            <p>Made with love & clean cow ghee. All rights reserved.</p>
+            <p>© 2025 Krish Dreamy Delight</p>
           </div>
         </div>
 

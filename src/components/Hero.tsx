@@ -140,12 +140,20 @@ export default function Hero({ onNavClick, config }: HeroProps) {
 
           {/* Main Hero Cake Mockup Illustration */}
           <div className="relative max-w-full z-10 transform hover:scale-[1.03] transition-transform duration-500">
+            {/* 6 beautiful sparkle spans around cake with different delays */}
+            <span className="sparkle" style={{ top: '12%', left: '10%', animationDelay: '0s'}} />
+            <span className="sparkle" style={{ top: '32%', right: '10%', animationDelay: '0.4s'}} />
+            <span className="sparkle" style={{ bottom: '22%', left: '12%', animationDelay: '0.8s'}} />
+            <span className="sparkle" style={{ bottom: '18%', right: '14%', animationDelay: '1.2s'}} />
+            <span className="sparkle" style={{ top: '48%', left: '82%', animationDelay: '1.6s'}} />
+            <span className="sparkle" style={{ top: '52%', left: '2%', animationDelay: '2.0s'}} />
+
             {/* The hotlinked sweet strawberry/cream tier cake image */}
             <img 
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn3nL1KY4jEX-wOu3OJG-hPN4rrokP8ihDG-_PLENIiisNySSDzZPUmuXzx6f5p-s_tSv685aFHMUA438EeQtQVgv0CPWpasrKKaHTuL0jQIUcIJtlm03QuN-hokalE-2cN0pRVdhMwbeQWaFTKOifnvipP5LouWOHImGXNDfK69-AB05dPemKNPmr2mD4lEIzRhld1tFQ3PZ6v9ik_CCBdFejJi1hKoH8cQXtwC8Zqu-q8h0-09ckUqXi4HlY1XXKil3_-FUxx6Q" 
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDn3nL1KY4jEX-wOu3OJG-hPN4rrokP8ihDG-_PLENIiisNySSDzZPUmuXzx6f5p-s_tSv685aFHMUA438EeQtQVgv0CPWpasrKKaHTuL0jQIUcIJtlm53QuN-hokalE-2cN0pRVdhMwbeQWaFTKOifnvipP5LouWOHImGXNDfK69-AB05dPemKNPmr2mD4lEIzRhld1tFQ3PZ6v9ik_CCBdFejJi1hKoH8cQXtwC8Zqu-q8h0-09ckUqXi4HlY1XXKil3_-FUxx6Q" 
               alt="Artistic multi-tier cake with rich strawberry garnishing and custom topper" 
               referrerPolicy="no-referrer"
-              className="w-full max-w-[280px] sm:max-w-[400px] md:max-w-[480px] h-auto object-contain animate-float drop-shadow-[0_25px_40px_rgba(135,78,88,0.3)]"
+              className="w-full max-w-[280px] sm:max-w-[400px] md:max-w-[480px] h-auto object-contain hero-cake drop-shadow-[0_25px_40px_rgba(135,78,88,0.3)]"
             />
             {/* Floating text bubbles to emulate interactive feedback */}
             <div className="absolute top-4 right-4 bg-white/90 border border-[#ffb6c1] px-3.5 py-1.5 rounded-2xl shadow-sm text-xs font-bold text-primary sticker-badge flex items-center gap-1">

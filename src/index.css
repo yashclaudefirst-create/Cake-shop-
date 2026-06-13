@@ -79,3 +79,41 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #874e58;
 }
+
+/* FIX 2 - HERO CAKE ANIMATION */
+.hero-cake {
+  animation: 
+    hero-float 3s ease-in-out infinite,
+    hero-tilt 4s ease-in-out infinite;
+}
+
+@keyframes hero-float {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes hero-tilt {
+  0%,100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.sparkle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: gold;
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%,
+    68% 57%, 79% 91%, 50% 70%,
+    21% 91%, 32% 57%, 2% 35%,
+    39% 35%
+  );
+  animation: hero-sparkle 2s ease-in-out 
+    infinite;
+}
+
+@keyframes hero-sparkle {
+  0%,100% { opacity:0; transform:scale(0); }
+  50% { opacity:1; transform:scale(1); }
+}
+

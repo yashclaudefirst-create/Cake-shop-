@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GalleryItem } from '../types';
-import { Heart, Search, Eye, X, Star, Calendar } from 'lucide-react';
+import { Heart, Search, Eye, X, Star, Calendar, Sparkles } from 'lucide-react';
 
 interface GalleryProps {
   items?: GalleryItem[];
@@ -40,8 +40,8 @@ export default function Gallery({ items }: GalleryProps) {
           <span className="p-1 px-3 bg-secondary/15 text-secondary text-[10px] font-bold rounded-full tracking-widest uppercase">
             Sweets & Cakes catalogue
           </span>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary tracking-tight">
-            Our Gourmet Sweet Gallery
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary tracking-tight flex items-center justify-center gap-2">
+            Our Creations <Sparkles className="w-6 h-6 text-yellow-400 fill-yellow-400" />
           </h2>
           <p className="font-sans text-sm text-on-surface-variant max-w-md mx-auto">
             Feast your eyes on our home baked best sellers. Every order is baked fresh using clean, premium cow butter.

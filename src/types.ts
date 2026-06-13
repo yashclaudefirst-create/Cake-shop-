@@ -1,7 +1,8 @@
-export type CategoryType = 'cake' | 'brownie';
+export type CategoryType = 'cake' | 'brownie' | 'cupcake' | 'muffin' | 'tres_leches' | 'cookies';
 
 export interface CakeCustomization {
   category: CategoryType;
+  shape: string; // "Classic Round", "Sweet Heart", "Modern Square"
   size: string; // "Small (0.5kg)", "Medium (1kg)", "Large (2kg)", "Double Tier (3kg+)"
   baseFlavor: string; // "Vanilla Butter", "Rich Chocolate", "Red Velvet", "Butterscotch", "Strawberry Cream"
   baseColor: string; // Hex color or descriptive color code
@@ -37,18 +38,18 @@ export interface Order {
 
 export const STEP_NAMES = [
   "Category Choice",
-  "Size & Servings",
-  "Base Flavor Sponge",
-  "Outer Frosting Color",
+  "Shape Design",
+  "Sizing & Portions",
+  "Artisanal Flavour",
   "Dietary Preference",
   "Interior Layer Filling",
   "Sweetness Level",
-  "Frosting Type",
+  "Frosting Layer Type",
   "Gourmet Toppings",
-  "Special Occasion Theme",
-  "Personal Message",
-  "Preferred Date & Slot",
-  "Delivery & Requests",
+  "Theme & Occasion",
+  "Letter Message",
+  "Booking Date & Slot",
+  "Delivery & Client Details",
   "Review & Checkout"
 ];
 

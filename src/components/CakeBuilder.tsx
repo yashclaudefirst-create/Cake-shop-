@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { gsap } from 'gsap';
 import { CakeCustomization, CustomerDetails, Order, CakeBuilderOptions } from '../types';
 import { 
   Cake as CakeIcon, 
@@ -19,8 +20,72 @@ import {
   MapPin, 
   Truck, 
   Store,
-  MessageSquare
+  MessageSquare,
+  Cookie,
+  Heart
 } from 'lucide-react';
+
+const FLAVOUR_GROUPS: Record<string, { name: string; price: number; color: string }[]> = {
+  'EVERYDAY CLASSICS': [
+    { name: 'Classic Vanilla', price: 600, color: '#FFF8DC' },
+    { name: 'Black Forest', price: 700, color: '#3D1C02' },
+    { name: 'White Forest', price: 750, color: '#F5F5F5' },
+    { name: 'Chocolate', price: 750, color: '#4A2C2A' },
+    { name: 'Butterscotch', price: 850, color: '#DAA520' }
+  ],
+  'PREMIUM FAVOURITES': [
+    { name: 'Red Velvet', price: 850, color: '#8B0000' },
+    { name: 'Real Fruit Mango', price: 950, color: '#FFD700' },
+    { name: 'Honey Cake', price: 1250, color: '#FFA500' },
+    { name: 'Rose Milk', price: 1350, color: '#FFB6C1' },
+    { name: 'Tender Coconut', price: 1250, color: '#F5DEB3' }
+  ],
+  'CHOCOLATE & FUSION': [
+    { name: 'Chocolate Truffles', price: 1150, color: '#2C1810' },
+    { name: 'White Truffle', price: 1250, color: '#FFFACD' },
+    { name: 'Oreo Truffle', price: 1250, color: '#1C1C1C' },
+    { name: 'Tresleches Cake', price: 1250, color: '#FFF8F0' },
+    { name: 'Rasamalai', price: 1250, color: '#FFFACD' },
+    { name: 'Gulab Jamun', price: 1250, color: '#8B0000' },
+    { name: 'Milk Gova', price: 1350, color: '#FFDAB9' }
+  ],
+  'CELEBRATION SPECIALS': [
+    { name: 'KitKat', price: 1500, color: '#C0392B' },
+    { name: 'Ferro Rocher', price: 1600, color: '#8B6914' },
+    { name: 'Nutella', price: 1400, color: '#3E1C00' }
+  ],
+  'BROWNIES': [
+    { name: 'Brownie Slab 600g', price: 750, color: '#1A0A00' }
+  ],
+  'CUPCAKES': [
+    { name: 'Vanilla Cream Cupcake', price: 80, color: '#FFF8DC' },
+    { name: 'Belgian Chocolate Cupcake', price: 90, color: '#4A2C2A' },
+    { name: 'Strawberry Red Velvet Cupcake', price: 100, color: '#8B0000' }
+  ],
+  'MUFFINS': [
+    { name: 'Blueberry Soft Muffin', price: 90, color: '#4682B4' },
+    { name: 'Double Choc Chip Muffin', price: 100, color: '#2C1810' }
+  ],
+  'TRES LECHES': [
+    { name: 'Classic Tres Leches Soak', price: 350, color: '#FFF8F0' },
+    { name: 'Mango Season Tres Leches', price: 420, color: '#FFD700' },
+    { name: 'Rose Petal Milk Tres Leches', price: 450, color: '#FFB6C1' }
+  ],
+  'COOKIES': [
+    { name: 'Warm Chocolate Chip Cookie', price: 60, color: '#D2691E' },
+    { name: 'Rich Macadamia Oat Cookie', price: 70, color: '#F4A460' }
+  ]
+};
+
+const getFlavorPriceAndColor = (flavorName: string) => {
+  for (const group of Object.values(FLAVOUR_GROUPS)) {
+    const found = group.find(f => f.name === flavorName);
+    if (found) {
+      return { price: found.price, color: found.color };
+    }
+  }
+  return { price: 600, color: '#FFF8DC' };
+};
 
 interface CakeBuilderProps {
   onOrderAdded: (newOrder: Order) => void;
@@ -100,15 +165,16 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
 
   const getInitialCustomization = (): CakeCustomization => ({
     category: 'cake',
-    size: options.sizes[1]?.name || options.sizes[0]?.name || '',
-    baseFlavor: options.flavors[0]?.name || '',
-    baseColor: options.colors[0]?.code || '#ffb6c1',
-    baseColorName: options.colors[0]?.name || 'Millennial Pink',
+    shape: 'Classic Round',
+    size: '1kg Portion (approx. 8-12 servings)',
+    baseFlavor: 'Classic Vanilla',
+    baseColor: '#FFF8DC',
+    baseColorName: 'Classic Vanilla',
     dietary: options.dietary[0]?.name || '',
     fillings: options.fillings[0]?.name || '',
     sweetness: options.sweetness[1]?.name || options.sweetness[0]?.name || '',
     frostingType: options.frostings[0]?.name || '',
-    toppings: options.toppings[0] ? [options.toppings[0].name] : [],
+    toppings: [],
     occasion: 'Birthday Celebration',
     messageOnCake: '',
     deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
@@ -122,48 +188,169 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
   const [validationError, setValidationError] = useState('');
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
 
+  // GSAP Baking Sequence state indicators
+  const [isBaking, setIsBaking] = useState(false);
+  const [bakingPercent, setBakingPercent] = useState(0);
+  const [bakingStage, setBakingStage] = useState<'prep' | 'mix' | 'oven' | 'ice' | 'decor' | 'finish'>('prep');
+  const [bakingStatusMessage, setBakingStatusMessage] = useState('Preheating luxury deck ovens...');
+
   // Pricing calculation helper linked completely to dynamic builderOptions
   const calculatePrice = (): number => {
-    let base = customization.category === 'cake' ? 500 : 350;
+    const { price: baseFlavorPrice } = getFlavorPriceAndColor(customization.baseFlavor);
+    let basePrice = baseFlavorPrice;
 
-    // Size pricing
-    const sizeOpt = options.sizes.find(s => s.name === customization.size);
-    if (sizeOpt) base += sizeOpt.price;
+    // Size multiplier
+    let sizeMultiplier = 1.0;
+    if (customization.category === 'cake') {
+      if (customization.size.includes('500g') || customization.size.includes('0.5kg')) {
+        sizeMultiplier = 0.6;
+      } else if (customization.size.includes('2kg') || customization.size.includes('2.0kg')) {
+        sizeMultiplier = 1.8;
+      } else if (customization.size.includes('1kg') || customization.size.includes('1.0kg')) {
+        sizeMultiplier = 1.0;
+      }
+    } else if (customization.category === 'cupcake' || customization.category === 'muffin' || customization.category === 'cookies') {
+      if (customization.size.includes('Box of 6')) {
+        sizeMultiplier = 6.0;
+      } else if (customization.size.includes('Box of 12')) {
+        sizeMultiplier = 11.0;
+      } else {
+        sizeMultiplier = 1.0;
+      }
+    } else if (customization.category === 'tres_leches') {
+      if (customization.size.includes('Medium')) {
+        sizeMultiplier = 2.0;
+      } else if (customization.size.includes('Party')) {
+        sizeMultiplier = 3.5;
+      } else {
+        sizeMultiplier = 1.0;
+      }
+    }
 
-    // Flavor sponging pricing
-    const flavorOpt = options.flavors.find(f => f.name === customization.baseFlavor);
-    if (flavorOpt) base += flavorOpt.price;
+    let calculated = Math.round(basePrice * sizeMultiplier);
 
-    // Dietary
+    // Dietary additions
     const dietaryOpt = options.dietary.find(d => d.name === customization.dietary);
-    if (dietaryOpt) base += dietaryOpt.price;
+    if (dietaryOpt) calculated += dietaryOpt.price;
 
     // Fillings
     const fillingsOpt = options.fillings.find(f => f.name === customization.fillings);
-    if (fillingsOpt) base += fillingsOpt.price;
+    if (fillingsOpt) calculated += fillingsOpt.price;
 
     // Sweetness
     const sweetnessOpt = options.sweetness.find(sw => sw.name === customization.sweetness);
-    if (sweetnessOpt) base += sweetnessOpt.price;
+    if (sweetnessOpt) calculated += sweetnessOpt.price;
 
     // Frosting
     const frostingOpt = options.frostings.find(fr => fr.name === customization.frostingType);
-    if (frostingOpt) base += frostingOpt.price;
+    if (frostingOpt) calculated += frostingOpt.price;
 
     // Toppings cumulative sum
     customization.toppings.forEach(top => {
       const toppingOpt = options.toppings.find(t => t.name === top);
-      if (toppingOpt) base += toppingOpt.price;
+      if (toppingOpt) calculated += toppingOpt.price;
     });
 
     // Special slots (e.g. Midnight)
-    if (customization.deliveryTimeSlot.includes('Midnight')) base += 150;
+    if (customization.deliveryTimeSlot.includes('Midnight')) calculated += 150;
 
     // Delivery charge
-    if (customer.deliveryType === 'delivery') base += 80;
+    if (customer.deliveryType === 'delivery') calculated += 80;
 
-    return base;
+    return calculated;
   };
+
+  const darkenColour = (hex: string): string => {
+    return hex + 'CC';
+  };
+
+  const updatePreviewColour = (colour: string) => {
+    ['sv-base', 'sv-top'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('fill', colour);
+    });
+    const dark = darkenColour(colour);
+    ['sv-base-top', 'sv-top-top'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.setAttribute('fill', dark);
+    });
+  };
+
+  const updatePreviewCream = (show: boolean) => {
+    const el = document.getElementById('sv-cream');
+    if (el) el.setAttribute('opacity', show ? '1' : '0');
+  };
+
+  const updatePreviewName = (name: string) => {
+    const el = document.getElementById('sv-name');
+    if (el) el.textContent = name;
+  };
+
+  const updatePreviewTopper = (text: string) => {
+    const el = document.getElementById('sv-topper');
+    if (el) {
+      el.textContent = text;
+      el.setAttribute('opacity', '1');
+    }
+  };
+
+  const updatePreviewDiet = (diet: string) => {
+    const badges: Record<string, string> = {
+      'Egg': 'EGG',
+      'Eggless': 'VEG',
+      'Wheat': 'GF'
+    };
+    const el = document.getElementById('sv-badge');
+    if (el) {
+      el.textContent = badges[diet] || '';
+      el.setAttribute('opacity', '1');
+    }
+  };
+
+  // Live Sync Effect for cake-svg preview elements
+  useEffect(() => {
+    if (customization.baseColor) {
+      updatePreviewColour(customization.baseColor);
+    }
+    
+    // Determine whether cream drops are shown
+    const hasCream = customization.frostingType || (customization.fillings && customization.fillings !== 'None');
+    updatePreviewCream(!!hasCream);
+    
+    // Message label on cake slab
+    updatePreviewName(customization.messageOnCake || '');
+    
+    // Choose premium topping label representing selected toppings
+    let topperLabel = '✦ DELIGHT ✦';
+    if (customization.toppings && customization.toppings.length > 0) {
+      const top = customization.toppings[0];
+      if (top.includes('Gold')) topperLabel = '✦ GOLD ✦';
+      else if (top.includes('Sprinkles')) topperLabel = '✿ SWEETS ✿';
+      else if (top.includes('Flower')) topperLabel = '✿ FLOWERS ✿';
+      else if (top.includes('Butterflies')) topperLabel = '✦ DECORS ✦';
+      else if (top.includes('Ganache')) topperLabel = '✦ GANACHE ✦';
+      else if (top.includes('Macarons')) topperLabel = '✦ MACARONS ✦';
+    }
+    updatePreviewTopper(topperLabel);
+    
+    // Choose badge representing dietary choice
+    let dietType = 'Egg';
+    if (customization.dietary) {
+      if (customization.dietary.includes('Eggless') || customization.dietary.includes('Vegan')) {
+        dietType = 'Eggless';
+      } else if (customization.dietary.includes('Gluten-Free')) {
+        dietType = 'Wheat';
+      }
+    }
+    updatePreviewDiet(dietType);
+  }, [
+    customization.baseColor,
+    customization.messageOnCake,
+    customization.toppings,
+    customization.fillings,
+    customization.frostingType,
+    customization.dietary
+  ]);
 
   // Step Navigators
   const nextStep = () => {
@@ -201,20 +388,107 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
 
   const handleSubmitOrder = (e: React.FormEvent) => {
     e.preventDefault();
-
-    const newOrder: Order = {
-      id: `SPOT-${Math.floor(10000 + Math.random() * 90000)}`,
-      customization,
-      customer,
-      totalPrice: calculatePrice(),
-      status: 'Received',
-      createdAt: new Date().toLocaleString('en-US', { hour12: true })
-    };
-
-    // Save order
-    onOrderAdded(newOrder);
-    setSubmittedOrder(newOrder);
+    // Start gorgeous GSAP baking sequence!
+    setIsBaking(true);
   };
+
+  // GSAP animated sequence scheduler
+  useEffect(() => {
+    if (!isBaking) return;
+
+    setBakingPercent(0);
+    setBakingStage('prep');
+    setBakingStatusMessage('Preheating deck ovens and calling chef assistants...');
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        const newOrder: Order = {
+          id: `SPOT-${Math.floor(10000 + Math.random() * 90000)}`,
+          customization,
+          customer,
+          totalPrice: calculatePrice(),
+          status: 'Received',
+          createdAt: new Date().toLocaleString('en-US', { hour12: true })
+        };
+        // Save to dynamic lists
+        onOrderAdded(newOrder);
+        setSubmittedOrder(newOrder);
+        setIsBaking(false);
+      }
+    });
+
+    // 1. Preparation Stage
+    tl.to({}, {
+      duration: 1.5,
+      onStart: () => {
+        setBakingStage('prep');
+        setBakingStatusMessage('Measuring organic flour, brown sugar, and high-fat creamery butter...');
+      },
+      onUpdate: function() {
+        setBakingPercent(Math.floor(this.progress() * 25));
+      }
+    });
+
+    // 2. Mixing Stage
+    tl.to({}, {
+      duration: 1.5,
+      onStart: () => {
+        setBakingStage('mix');
+        setBakingStatusMessage('Whisking premium egg batters with organic vanilla extracts...');
+      },
+      onUpdate: function() {
+        setBakingPercent(25 + Math.floor(this.progress() * 25));
+      }
+    });
+
+    // 3. Baking In Oven
+    tl.to({}, {
+      duration: 1.8,
+      onStart: () => {
+        setBakingStage('oven');
+        setBakingStatusMessage(`Baking the fluffy ${customization.baseFlavor} base core at 175°C...`);
+      },
+      onUpdate: function() {
+        setBakingPercent(50 + Math.floor(this.progress() * 25));
+      }
+    });
+
+    // 4. Frosting Application
+    tl.to({}, {
+      duration: 1.4,
+      onStart: () => {
+        setBakingStage('ice');
+        setBakingStatusMessage(`Cooling core, preparing piping bags, and sifting ${customization.baseColorName} frosting...`);
+      },
+      onUpdate: function() {
+        setBakingPercent(75 + Math.floor(this.progress() * 20));
+      }
+    });
+
+    // 5. Finishing Decorations
+    tl.to({}, {
+      duration: 1.3,
+      onStart: () => {
+        setBakingStage('decor');
+        setBakingStatusMessage('Securing dynamic toppings, piping details, and boxing order...');
+      },
+      onUpdate: function() {
+        setBakingPercent(95 + Math.floor(this.progress() * 5));
+      }
+    });
+
+    tl.to({}, {
+      duration: 0.5,
+      onStart: () => {
+        setBakingStage('finish');
+        setBakingStatusMessage('Master creation fully boxed and sealed!');
+      }
+    });
+
+    return () => {
+      tl.kill();
+    };
+  }, [isBaking, customization, customer]);
 
   return (
     <section id="builder" className="py-20 bg-[#fff1ea]/60 relative select-none">
@@ -233,7 +507,194 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
           </p>
         </div>
 
-        {submittedOrder ? (
+        {isBaking ? (
+          /* GSAP Animated Baking Sequence overlay */
+          <div className="max-w-3xl mx-auto bg-white/70 backdrop-blur-md border border-primary-container/40 rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[520px] shadow-xl relative overflow-hidden animate-fade-in text-left">
+            {/* Decorative background blurs */}
+            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 filter blur-2xl rounded-full" />
+            <div className="absolute bottom-0 right-0 w-32 h-32 bg-secondary/5 filter blur-2xl rounded-full" />
+
+            <div className="text-center mb-8 max-w-md z-15">
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/10 text-amber-850 text-[10px] font-bold rounded-full tracking-widest uppercase mb-3 animate-pulse">
+                <Sparkles size={11} className="text-[#e9c400] fill-current" /> Bakery Laboratory Slot Active <Sparkles size={11} className="text-[#e9c400] fill-current" />
+              </span>
+              <h3 className="font-display text-2xl md:text-3xl font-black text-primary tracking-tight">
+                Baking Your Dream Recipe...
+              </h3>
+              <p className="font-sans text-xs text-[#847375] mt-2">
+                Our kitchen artisans are composing your exact details into a glorious confection slab.
+              </p>
+            </div>
+
+            {/* GSAP Target Workbench Card */}
+            <div className="relative w-full max-w-lg h-72 bg-gradient-to-br from-[#fffdfc] to-[#fff8f5] border border-[#d6c2c3]/30 rounded-2xl flex flex-col items-center justify-center overflow-hidden p-6 shadow-inner z-10">
+              
+              {/* OVEN STEAM RAYS */}
+              <div className="absolute top-4 inset-x-6 flex justify-between px-4 opacity-40">
+                <div className="h-1 w-16 bg-primary/20 rounded-full animate-pulse" />
+                <div className="h-1 w-12 bg-primary/20 rounded-full animate-pulse delay-75" />
+                <div className="h-1 w-20 bg-primary/20 rounded-full animate-pulse delay-150" />
+              </div>
+
+              {/* STAGE-SPECIFIC ANIMATED CONTAINER */}
+              <div className="flex-1 w-full flex items-center justify-center relative">
+                
+                {/* 1. PREP STAGE */}
+                {bakingStage === 'prep' && (
+                  <div className="flex items-center gap-8 justify-center animate-fade-in text-left">
+                    <div className="baking-egg flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
+                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Fresh Eggs</span>
+                    </div>
+                    <div className="baking-flour flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
+                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Flour</span>
+                    </div>
+                    <div className="baking-sugar flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
+                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
+                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Organic Nectar</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* 2. MIXING STAGE */}
+                {bakingStage === 'mix' && (
+                  <div className="flex flex-col items-center justify-center animate-fade-in text-left">
+                    <div className="baking-bowl relative w-28 h-20 bg-neutral-200 border-b-8 border-x-4 border-neutral-300 rounded-b-full shadow-inner flex items-center justify-center">
+                      <div className="absolute bottom-1 inset-x-1 h-9 bg-amber-100 rounded-b-full animate-pulse" />
+                      <div className="baking-whisk absolute bottom-4 text-primary">
+                        <Sparkles className="w-6 h-6 animate-spin text-primary" />
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-black text-amber-800 uppercase mt-4 block tracking-wider animate-pulse">
+                      High-Speed Electric Whisk Action...
+                    </span>
+                  </div>
+                )}
+
+                {/* 3. baking OVEN STAGE */}
+                {bakingStage === 'oven' && (
+                  <div className="flex flex-col items-center justify-center animate-fade-in w-full text-left">
+                    <div className="relative w-56 h-36 bg-zinc-800 rounded-2xl border-4 border-zinc-700 shadow-2xl flex flex-col justify-between overflow-hidden">
+                      <div className="bg-zinc-700 h-6 border-b border-zinc-650 flex items-center justify-between px-3 text-[8px] text-orange-400 font-mono">
+                        <span>CONVECTION</span>
+                        <span>175°C [ACTIVE]</span>
+                      </div>
+                      
+                      <div className="flex-1 bg-zinc-950/90 relative flex items-center justify-center p-3">
+                        <div className="oven-glow absolute inset-0 bg-radial-at-t from-orange-600/30 via-transparent to-transparent pointer-events-none" />
+                        
+                        <div className="relative w-28 h-16 flex flex-col justify-end">
+                          <div className="baking-sponge w-24 h-12 bg-amber-800 border-t-2 border-amber-500 rounded-t-xl mx-auto z-10" />
+                          <div className="w-28 h-4 bg-zinc-400 rounded-b-md border-t border-zinc-300 relative z-20" />
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-black text-[#874e58] uppercase mt-3 block tracking-wide">
+                      Core sponge rising inside convection oven...
+                    </span>
+                  </div>
+                )}
+
+                {/* 4. FROSTING ASSEMBLY STAGE */}
+                {bakingStage === 'ice' && (
+                  <div className="flex flex-col items-center justify-center animate-fade-in text-left">
+                    <div className="relative flex flex-col items-center justify-center">
+                      <div className="baking-sponge-color w-32 h-16 rounded-t-xl relative border-b-2 border-primary/25 flex flex-col items-center justify-center shadow-lg"
+                           style={{ backgroundColor: customization.baseColor }}>
+                        <div className="w-full h-1 bg-white/40 absolute top-1/2" />
+                      </div>
+                      
+                      <div className="baking-spatula absolute -top-4 z-30 filter drop-shadow-md text-white">
+                        <Sparkles className="w-8 h-8 text-white fill-amber-200 animate-bounce" />
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-black text-[#874e58] uppercase mt-4 block tracking-wide">
+                      Coat application in progress...
+                    </span>
+                  </div>
+                )}
+
+                {/* 5. FINISHING DECOR STAGE */}
+                {bakingStage === 'decor' && (
+                  <div className="flex flex-col items-center justify-center animate-fade-in w-full text-left">
+                    <div className="relative flex flex-col items-center pt-8 scale-110">
+                      <div className="w-32 h-18 rounded-t-xl rounded-b-md relative border-b-4 border-amber-950/20 flex flex-col items-center justify-center shadow-lg"
+                           style={{ backgroundColor: customization.baseColor }}>
+                        
+                        <div className="w-full h-1 bg-white/30 absolute top-1/3" />
+                        
+                        {customization.messageOnCake && (
+                          <div className="absolute top-[25%] inset-x-2 text-center pointer-events-none">
+                            <span className="font-cursive text-[7px] px-1 py-0.5 rounded text-amber-950 bg-white/80 font-bold block truncate max-w-[75px] mx-auto">
+                              {customization.messageOnCake}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="baking-topping-particles absolute -top-8 flex gap-2 text-lg">
+                        {customization.toppings.slice(0, 3).map((top, idx) => {
+                          let color = '#FFD700';
+                          if (top.includes('Sprinkles')) color = '#FF69B4';
+                          else if (top.includes('Flower')) color = '#FF81C1';
+                          else if (top.includes('Butterflies')) color = '#E6C280';
+                          else if (top.includes('Ganache')) color = '#4A2C2A';
+                          return (
+                            <span key={idx} className="animate-bounce" style={{ animationDelay: `${idx * 0.1}s` }}>
+                              <Sparkles className="w-5 h-5" style={{ color }} />
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 6. COMPLETE STAGE */}
+                {bakingStage === 'finish' && (
+                  <div className="flex flex-col items-center justify-center animate-fade-in text-center text-left">
+                    <span className="text-5xl animate-bounce">🎁</span>
+                    <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase mt-4 block">
+                      Perfect Recipe Complete!
+                    </span>
+                  </div>
+                )}
+
+              </div>
+
+            </div>
+
+            {/* PROGRESS TICKER FOR USER ACCESSIBILITY */}
+            <div className="w-full max-w-lg mt-6 space-y-3 z-10 text-left">
+              <div className="flex justify-between items-center text-[11px] font-black uppercase text-primary tracking-wider font-mono">
+                <span>Confection Assembly Status:</span>
+                <span>{bakingPercent}%</span>
+              </div>
+
+              <div className="w-full h-3 bg-primary/10 rounded-full p-0.5 overflow-hidden border border-primary/20">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary via-secondary to-emerald-600 rounded-full transition-all duration-100 shadow-inner" 
+                  style={{ width: `${bakingPercent}%` }}
+                />
+              </div>
+
+              <p className="text-center font-display text-xs font-black uppercase text-primary tracking-widest animate-pulse h-6">
+                {bakingStatusMessage}
+              </p>
+
+              {/* Human step indicators */}
+              <div className="grid grid-cols-5 gap-1 pt-2 text-[8px] font-black tracking-wider text-[#847375] uppercase font-sans text-center">
+                <span className={`p-1.5 rounded-lg border ${bakingStage === 'prep' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>1. Prep</span>
+                <span className={`p-1.5 rounded-lg border ${bakingStage === 'mix' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>2. Mix</span>
+                <span className={`p-1.5 rounded-lg border ${bakingStage === 'oven' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>3. Bake</span>
+                <span className={`p-1.5 rounded-lg border ${bakingStage === 'ice' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>4. Frost</span>
+                <span className={`p-1.5 rounded-lg border ${['decor', 'finish'].includes(bakingStage) ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>5. Decor</span>
+              </div>
+            </div>
+
+          </div>
+        ) : submittedOrder ? (
           /* Confirmation Success Panel */
           <div className="max-w-xl mx-auto glass-card rounded-3xl p-8 text-center border border-primary-container space-y-6 animate-bounce-slight">
             <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mx-auto">
@@ -284,8 +745,25 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
             <div className="pt-2 space-y-3">
               <a
                 href={(() => {
-                  const orderDetails = `Hi Krish Dreamy Delight! 🎂\n\nI just placed a custom cake order on your website:\n*Order ID:* ${submittedOrder.id}\n*Name:* ${submittedOrder.customer.name}\n*Cake Style:* ${submittedOrder.customization.category.toUpperCase()} (${submittedOrder.customization.size})\n*Base Flavor:* ${submittedOrder.customization.baseFlavor}\n*Frosting Shade:* ${submittedOrder.customization.baseColorName}\n*Frosting Inscription:* "${submittedOrder.customization.messageOnCake || 'None'}"\n*Dispatch:* ${submittedOrder.customer.deliveryType === 'delivery' ? 'Home Delivery' : 'Self Pickup'}\n*TotalPrice:* ₹${submittedOrder.totalPrice}\n\nPlease confirm my slot booking! Thank you. ✨`;
-                  return `https://wa.me/919876543210?text=${encodeURIComponent(orderDetails)}`;
+                  const orderDetails = `Hi Krish Dreamy Delight!
+I want to place an order:
+
+- Category: ${submittedOrder.customization.category}
+- Flavour: ${submittedOrder.customization.baseFlavor}
+- Price: ₹${submittedOrder.totalPrice}
+- Shape: ${submittedOrder.customization.shape}
+- Size: ${submittedOrder.customization.size}
+- Cream: ${submittedOrder.customization.frostingType}
+- Theme: ${submittedOrder.customization.occasion}
+- Stickers: ${submittedOrder.customization.toppings.join(', ') || 'None'}
+- Toppings: ${submittedOrder.customization.toppings.join(', ') || 'None'}
+- Occasion: ${submittedOrder.customization.occasion}
+- Diet: ${submittedOrder.customization.dietary}
+- Name on cake: ${submittedOrder.customization.messageOnCake || 'None'}
+- Delivery date: ${submittedOrder.customization.deliveryDate}
+
+Please confirm availability!`;
+                  return `https://wa.me/919865621880?text=${encodeURIComponent(orderDetails)}`;
                 })()}
                 target="_blank"
                 rel="noreferrer"
@@ -367,135 +845,214 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
                   <div className="space-y-4 animate-fadeIn">
                     <h3 className="font-display font-bold text-lg text-primary">Choose Your Desserts Base</h3>
                     <p className="font-sans text-xs text-on-surface-variant">
-                      Artisanal custom tier cakes or premium gooey loaded brownies cut into generous party slices.
+                      Choose from our whimsical range of sweet bakes, customized fresh to order.
                     </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <button
-                        onClick={() => {
-                          setCustomization(prev => ({ ...prev, category: 'cake' }));
-                          nextStep();
-                        }}
-                        className={`p-6 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
-                          customization.category === 'cake'
-                            ? 'border-primary bg-primary-container/15'
-                            : 'border-outline-variant bg-white/50'
-                        }`}
-                      >
-                        <CakeIcon className="text-primary" size={28} />
-                        <div>
-                          <h4 className="font-display font-bold text-sm text-primary">Custom Sponge Cakes</h4>
-                          <span className="text-[11px] text-on-surface-variant">Beautiful custom layered frosting birthday & celebration mainstays from ₹500</span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setCustomization(prev => ({ ...prev, category: 'brownie' }));
-                          nextStep();
-                        }}
-                        className={`p-6 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
-                          customization.category === 'brownie'
-                            ? 'border-primary bg-primary-container/15'
-                            : 'border-outline-variant bg-white/50'
-                        }`}
-                      >
-                        <UtensilsCrossed className="text-primary" size={28} />
-                        <div>
-                          <h4 className="font-display font-bold text-sm text-primary">Loaded Brownie Boxes</h4>
-                          <span className="text-[11px] text-on-surface-variant">Deep organic chocolate fudge squares drizzled with toppings from ₹350</span>
-                        </div>
-                      </button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                      {[
+                        { id: 'cake', title: 'Fresh Cream Cake', desc: 'Beautiful custom layered frosting birthday & celebration mainstays from ₹500', icon: CakeIcon },
+                        { id: 'cupcake', title: 'Cupcake', desc: 'Cute single-serving whipped cream frosted delights from ₹80', icon: CakeIcon },
+                        { id: 'muffin', title: 'Muffin', desc: 'Warm local berry-studded soft morning bakes from ₹90', icon: Sparkles },
+                        { id: 'tres_leches', title: 'Tres Leches', desc: 'Rich, moisture layers of three milks soaked sponge cake from ₹350', icon: CakeIcon },
+                        { id: 'cookies', title: 'Cookies', desc: 'Crisp, premium hand-scooped chocolate chip bakery cookies from ₹60', icon: Cookie },
+                        { id: 'brownie', title: 'Fudgy Brownies', desc: 'Deep organic chocolate fudge squares drizzled with toppings from ₹350', icon: Cookie }
+                      ].map((cat) => {
+                        const IconComponent = cat.icon;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setCustomization(prev => ({ ...prev, category: cat.id as any }));
+                              nextStep();
+                            }}
+                            className={`p-5 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
+                              customization.category === cat.id
+                                ? 'border-primary bg-primary-container/15 font-bold'
+                                : 'border-outline-variant bg-white/50'
+                            }`}
+                          >
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center p-2 text-primary shrink-0">
+                              <IconComponent className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h4 className="font-display font-bold text-sm text-primary">{cat.title}</h4>
+                              <span className="text-[10px] text-on-surface-variant leading-relaxed block mt-0.5">{cat.desc}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {/* STEP 2: Size Choice */}
+                {/* STEP 2: Shape Choice */}
                 {step === 2 && (
-                  <div className="space-y-4">
+                  <div className="space-y-4 animate-fadeIn">
+                    <h3 className="font-display font-bold text-lg text-primary">Portion Shape Design</h3>
+                    <p className="font-sans text-xs text-on-surface-variant">
+                      Choose the geometric canvas for your custom hand-made bake.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      {[
+                        { id: 'round', name: 'Classic Round', desc: 'Traditional elegant circle', element: <div className="w-5 h-5 rounded-full border-2 border-current" /> },
+                        { id: 'heart', name: 'Sweet Heart', desc: 'Perfect romantic choice', element: <Heart className="w-5 h-5 fill-current" /> },
+                        { id: 'square', name: 'Modern Square', desc: 'Bold contemporary finish', element: <div className="w-5 h-5 border-2 border-current rounded-xs" /> }
+                      ].map((sh) => (
+                        <button
+                          key={sh.name}
+                          type="button"
+                          onClick={() => setCustomization(prev => ({ ...prev, shape: sh.name }))}
+                          className={`p-5 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
+                            customization.shape === sh.name
+                              ? 'border-primary bg-primary-container/15 font-bold text-primary shadow-[0_4px_12px_rgba(219,39,119,0.1)]'
+                              : 'border-outline-variant bg-white/50 text-neutral-600'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                            {sh.element}
+                          </div>
+                          <div>
+                            <h4 className="font-display font-semibold text-sm text-primary">{sh.name}</h4>
+                            <span className="text-[10px] text-on-surface-variant leading-tight block mt-1">{sh.desc}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: Size Choice with Prices */}
+                {step === 3 && (
+                  <div className="space-y-4 animate-fadeIn">
                     <h3 className="font-display font-bold text-lg text-primary">Physical Sizing & Serving Yield</h3>
                     <p className="font-sans text-xs text-on-surface-variant">
-                      Calibrate the pound weight to fit your guest list perfectly.
+                      Calibrate the portion size to fit your guest list perfectly. Price adjusts automatically!
                     </p>
                     <div className="grid grid-cols-1 gap-3 pt-2">
-                      {options.sizes.map((sizeItem) => (
-                        <button
-                          key={sizeItem.id}
-                          onClick={() => setCustomization({ ...customization, size: sizeItem.name })}
-                          className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
-                            customization.size === sizeItem.name
-                              ? 'border-primary bg-primary-container/15 font-bold'
-                              : 'border-outline-variant/55 bg-white/50'
-                          }`}
-                        >
-                          <div>
-                            <span className="font-display text-xs text-primary block">{sizeItem.name}</span>
-                            {sizeItem.description && (
-                              <span className="text-[10px] text-on-surface-variant font-normal block">{sizeItem.description}</span>
-                            )}
-                          </div>
-                          <span className="text-xs text-primary font-bold">
-                            {sizeItem.price === 0 ? '₹0' : `+₹${sizeItem.price}`}
-                          </span>
-                        </button>
-                      ))}
+                      {(() => {
+                        const getAvailableSizes = () => {
+                          if (customization.category === 'cake') {
+                            return [
+                              { name: '500g Portion (approx. 4-6 servings)', desc: 'Base Price × 0.6 multiplier', priceLabel: '0.6x base' },
+                              { name: '1kg Portion (approx. 8-12 servings)', desc: 'Standard weight - Base Price × 1.0', priceLabel: '1.0x base' },
+                              { name: '2kg Portion (approx. 16-20 servings)', desc: 'Large celebration - Base Price × 1.8', priceLabel: '1.8x base' }
+                            ];
+                          } else if (customization.category === 'brownie') {
+                            return [
+                              { name: '600g Slab (Box of 6-9 pieces)', desc: 'Freshly baked organic chocolate brownie slab', priceLabel: '₹750' }
+                            ];
+                          } else if (customization.category === 'cupcake' || customization.category === 'muffin' || customization.category === 'cookies') {
+                            return [
+                              { name: 'Single Portion', desc: 'Just a single fresh bake', priceLabel: '1x base' },
+                              { name: 'Box of 6 Pack', desc: 'Sweet savings - 6x base price', priceLabel: '6x base' },
+                              { name: 'Box of 12 Party', desc: 'Grand pack - 11x base price (1 free!)', priceLabel: '11x base' }
+                            ];
+                          } else if (customization.category === 'tres_leches') {
+                            return [
+                              { name: 'Single Cup serving', desc: 'Moist and delicious single portion', priceLabel: '1x base' },
+                              { name: 'Medium Tub (0.5kg)', desc: 'Perfect sharing tub - 2x base price', priceLabel: '2x base' },
+                              { name: 'Party Bowl (1kg)', desc: 'Grand feast bowl - 3.5x base price', priceLabel: '3.5x base' }
+                            ];
+                          }
+                          return [
+                            { name: 'Standard Portion', desc: 'Standard single piece serving', priceLabel: '1.0x base' }
+                          ];
+                        };
+                        return getAvailableSizes().map((sizeItem) => {
+                          const isSelected = customization.size === sizeItem.name;
+                          return (
+                            <button
+                              key={sizeItem.name}
+                              type="button"
+                              onClick={() => {
+                                setCustomization(prev => ({ ...prev, size: sizeItem.name }));
+                              }}
+                              className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
+                                isSelected
+                                  ? 'border-primary bg-primary-container/15 font-bold'
+                                  : 'border-outline-variant/55 bg-white/50'
+                              }`}
+                            >
+                              <div>
+                                <span className="font-display text-xs text-primary block">{sizeItem.name}</span>
+                                <span className="text-[10px] text-on-surface-variant font-normal block">{sizeItem.desc}</span>
+                              </div>
+                              <span className="text-xs text-pink-500 font-bold">
+                                {sizeItem.priceLabel}
+                              </span>
+                            </button>
+                          );
+                        });
+                      })()}
                     </div>
                   </div>
                 )}
 
-                {/* STEP 3: Base Flavor Sponge */}
-                {step === 3 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Select Sponge Cake/Brownie Base Flavor</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Our signature recipes are whipped using real cream butter and luxury organic Madagascar vanilla pods or Belgian cocoa.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {options.flavors.map((flav) => (
-                        <button
-                          key={flav.id}
-                          onClick={() => setCustomization({ ...customization, baseFlavor: flav.name })}
-                          className={`p-4 rounded-2xl border-2 text-left flex flex-col gap-1 transition-all cursor-pointer ${
-                            customization.baseFlavor === flav.name
-                              ? 'border-primary bg-primary-container/15'
-                              : 'border-outline-variant/50 bg-white/50'
-                          }`}
-                        >
-                          <span className="font-display text-xs font-bold text-primary">{flav.name}</span>
-                          <span className="text-[10px] text-on-surface-variant">
-                            {flav.price === 0 ? '₹0' : `+₹${flav.price}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 4: Color Settings */}
+                {/* STEP 4: FLAVOUR Selection with groups */}
                 {step === 4 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Outer Frosting Dress Shade</h3>
+                  <div className="space-y-4 animate-fadeIn">
+                    <h3 className="font-display font-bold text-lg text-primary">Select Custom Flavour</h3>
                     <p className="font-sans text-xs text-on-surface-variant">
-                      This changes the visual frosting layer color in the live graphic preview panel!
+                      Each recipe is hand-whipped fresh by standard premium menu criteria.
                     </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                      {options.colors.map((col) => (
-                        <button
-                          key={col.id}
-                          onClick={() => setCustomization({ ...customization, baseColor: col.code || '#ffb6c1', baseColorName: col.name })}
-                          className={`p-3.5 rounded-2xl border-2 text-center flex flex-col items-center gap-2 transition-all cursor-pointer ${
-                            customization.baseColorName === col.name
-                              ? 'border-primary bg-primary-container/20 font-bold scale-[1.03]'
-                              : 'border-outline-variant/50 bg-white/30'
-                          }`}
-                        >
-                          <div 
-                            className="w-10 h-10 rounded-full border border-primary/20 shadow-inner"
-                            style={{ backgroundColor: col.code || '#ffb6c1' }}
-                          />
-                          <span className="text-[10px] text-on-surface font-semibold truncate block w-full">
-                            {col.name}
-                          </span>
-                        </button>
+
+                    <div className="space-y-6 max-h-[320px] overflow-y-auto pr-1">
+                      {Object.keys(FLAVOUR_GROUPS)
+                        .filter(groupName => {
+                          if (customization.category === 'cake') {
+                            return ['EVERYDAY CLASSICS', 'PREMIUM FAVOURITES', 'CHOCOLATE & FUSION', 'CELEBRATION SPECIALS'].includes(groupName);
+                          } else if (customization.category === 'brownie') {
+                            return groupName === 'BROWNIES';
+                          } else if (customization.category === 'cupcake') {
+                            return groupName === 'CUPCAKES';
+                          } else if (customization.category === 'muffin') {
+                            return groupName === 'MUFFINS';
+                          } else if (customization.category === 'tres_leches') {
+                            return groupName === 'TRES LECHES';
+                          } else if (customization.category === 'cookies') {
+                            return groupName === 'COOKIES';
+                          }
+                          return true;
+                        })
+                        .map(groupName => (
+                          <div key={groupName} className="space-y-2">
+                            <h4 className="text-[10px] font-bold tracking-wider text-primary/70 uppercase">
+                              {groupName}
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {FLAVOUR_GROUPS[groupName].map(flav => {
+                                const isSelected = customization.baseFlavor === flav.name;
+                                return (
+                                  <button
+                                    key={flav.name}
+                                    type="button"
+                                    onClick={() => {
+                                      setCustomization(prev => ({
+                                        ...prev,
+                                        baseFlavor: flav.name,
+                                        baseColor: flav.color,
+                                        baseColorName: flav.name
+                                      }));
+                                    }}
+                                    className={`p-3 rounded-xl border-2 text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
+                                      isSelected
+                                        ? 'border-yellow-400 bg-amber-50/40 shadow-[0_0_12px_rgba(250,204,21,0.4)] scale-[1.01]'
+                                        : 'border-outline-variant/50 bg-white/50 hover:bg-neutral-50/50'
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="w-4 h-4 rounded-full border border-primary/10 shadow-inner shrink-0" style={{ backgroundColor: flav.color }} />
+                                      <span className="font-display text-xs font-bold text-slate-800">
+                                        {flav.name}
+                                      </span>
+                                    </div>
+                                    <span className="text-xs font-bold text-pink-500 shrink-0">
+                                      ₹{flav.price}
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
                       ))}
                     </div>
                   </div>
@@ -833,7 +1390,7 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
                           value={customer.phone}
                           onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
                           className="w-full p-2.5 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="9876543210"
+                          placeholder="98656 21880"
                         />
                       </div>
                       <div className="space-y-1">
@@ -951,96 +1508,91 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
               {/* The Visual Cake Stack Object */}
               <div className="relative w-64 h-64 flex items-center justify-center animate-float">
                 {/* Visual shadow glow */}
-                <div className="w-52 h-6 bg-primary/10 rounded-full blur-md absolute bottom-2" />
+                <div className="w-52 h-6 bg-primary/10 rounded-full blur-md absolute bottom-2 pointer-events-none" />
 
-                {customization.category === 'cake' ? (
-                  /* Sponge Layer 3D stacked emulations */
-                  <div className="relative w-full flex flex-col items-center justify-center pt-8">
+                <svg 
+                  id="cake-svg" 
+                  viewBox="0 0 200 220"
+                  width="200" 
+                  height="220"
+                  className="relative z-10 filter drop-shadow-md"
+                >
+                  <rect 
+                    id="sv-base" 
+                    x="20" y="140" 
+                    width="160" height="60"
+                    rx="8" fill="#FFB6C1"
+                    style={{ transition: 'fill 0.5s' }}
+                  />
                     
-                    {/* TOP TIER layer (only shown on Double Tier) */}
-                    {customization.size.includes('Double Tier') && (
-                      <div 
-                        className="w-24 h-16 rounded-t-lg rounded-b-md relative z-20 border-b-2 border-primary/10 flex flex-col items-center justify-center shadow-md transition-all duration-500"
-                        style={{ backgroundColor: customization.baseColor }}
-                      >
-                        {/* Buttercream layer line ring */}
-                        <div className="w-full h-1 bg-white/50 absolute top-1/2" />
-                        <div className="absolute -top-3.5 flex gap-1 animate-pulse">
-                          <Sparkles className="text-pink-300 w-3.5 h-3.5" />
-                          <Sparkles className="text-amber-300 w-3.5 h-3.5" />
-                          <Sparkles className="text-pink-300 w-3.5 h-3.5" />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* MAIN BOTTOM TIER base layer */}
-                    <div 
-                      className="w-40 h-24 rounded-lg relative z-10 border-b-4 border-primary/20 flex flex-col items-center justify-center shadow-lg transition-all duration-500"
-                      style={{ 
-                        backgroundColor: customization.baseColor,
-                        transform: customization.size.includes('Double Tier') ? 'scale(1.05)' : 'scale(1.15) translateY(-8px)'
-                      }}
-                    >
-                      {/* Piped decorations and drip decorations simulation */}
-                      {customization.toppings.includes('Chocolate Ganache Drip') && (
-                        <div className="w-full absolute top-0 flex justify-between px-0.5 pointer-events-none">
-                          {Array.from({ length: 8 }).map((_, di) => (
-                            <div key={di} className="w-1.5 h-3.5 bg-amber-900 rounded-b-full shadow-xs" />
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Sweet whipping edge ring */}
-                      <div className="w-full h-1.5 bg-white/70 absolute top-[43%] translate-y-[-50%]" />
-
-                      {/* Sparkles, Berries, Toppings stacked overlays on active preview cylinder */}
-                      <div className="absolute inset-x-2 bottom-5 flex justify-around pointer-events-none">
-                        {customization.toppings.includes('French Macarons & Organic Berries') && <Sparkles size={16} className="text-rose-500 fill-rose-300" />}
-                        {customization.toppings.includes('Magic Edible Butterflies') && <Sparkles size={16} className="text-indigo-400 animate-bounce" />}
-                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <Sparkles size={16} className="text-pink-400" />}
-                        {customization.toppings.includes('Edible 24k Gold Foil flakes') && <Sparkles size={16} className="text-[#e9c400] font-bold fill-current" />}
-                      </div>
-
-                      {/* Personal Text message on cake base */}
-                      {customization.messageOnCake && (
-                        <div className="absolute top-[55%] inset-x-2 text-center pointer-events-none">
-                          <span className="font-cursive text-xs text-glow px-2 py-0.5 rounded-md text-amber-900 bg-white/70 font-bold block truncate max-w-[130px] mx-auto transform -rotate-1">
-                            {customization.messageOnCake}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  /* Brownie box stacked representation */
-                  <div className="relative flex flex-col items-center justify-center w-full pt-8 scale-110">
-                    <div className="w-44 h-28 bg-[#4a3538] rounded-xl border-4 border-amber-950 flex flex-col justify-between p-2 shadow-xl relative z-10">
-                      {/* Grid brownie lines */}
-                      <div className="absolute inset-0 grid grid-cols-3 grid-rows-2 border-2 border-amber-950/20 rounded-lg pointer-events-none opacity-20" />
-                      
-                      {customization.toppings.includes('Chocolate Ganache Drip') && (
-                        <div className="w-full h-full absolute inset-0 bg-amber-950/15 pointer-events-none blur-xs rounded-lg" />
-                      )}
-
-                      <div className="flex justify-around">
-                        {customization.toppings.includes('French Macarons & Organic Berries') && <Sparkles size={12} className="text-rose-500 fill-rose-300 inline" />}
-                        {customization.toppings.includes('Rainbow Sprinkles') && <Sparkles size={12} className="text-amber-500 inline animate-spin-slow" />}
-                        {customization.toppings.includes('Artisan Whipped Sugar Flowers') && <Sparkles size={12} className="text-pink-400 inline" />}
-                      </div>
-                      <div className="text-center font-display text-[9px] font-bold text-[#ffb6c1] bg-[#874e58]/80 rounded p-1 max-w-[100px] mx-auto block z-20">
-                        Premium Fudge Box
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  <ellipse 
+                    id="sv-base-top"
+                    cx="100" cy="140"
+                    rx="80" ry="12"
+                    fill="#FF69B4"
+                    style={{ transition: 'fill 0.5s' }}
+                  />
+                    
+                  <rect 
+                    id="sv-top"
+                    x="45" y="90"
+                    width="110" height="50"
+                    rx="8" fill="#FFB6C1"
+                    style={{ transition: 'fill 0.5s' }}
+                  />
+                    
+                  <ellipse 
+                    id="sv-top-top"
+                    cx="100" cy="90"
+                    rx="55" ry="10"
+                    fill="#FF69B4"
+                    style={{ transition: 'fill 0.5s' }}
+                  />
+                    
+                  <rect 
+                    id="sv-cream"
+                    x="45" y="83"
+                    width="110" height="10"
+                    rx="5" fill="white"
+                    opacity="0"
+                    style={{ transition: 'opacity 0.5s' }}
+                  />
+                    
+                  <text 
+                    id="sv-name"
+                    x="100" y="175"
+                    textAnchor="middle"
+                    fontSize="11"
+                    fontFamily="cursive"
+                    fill="white"
+                    fontWeight="bold"
+                  />
+                    
+                  <text 
+                    id="sv-topper"
+                    x="100" y="70"
+                    textAnchor="middle"
+                    fontSize="20"
+                    opacity="0"
+                    style={{ transition: 'opacity 0.3s' }}
+                  />
+                    
+                  <text 
+                    id="sv-badge"
+                    x="170" y="155"
+                    fontSize="14"
+                    opacity="0"
+                    style={{ transition: 'opacity 0.3s' }}
+                  />
+                </svg>
               </div>
 
               {/* Computed live invoice ticker badge pricing */}
-              <div className="w-full bg-[#ffeade]/60 hover:bg-[#ffeade]/80 rounded-2xl p-4 border border-primary/5 text-center mt-4 transition-all">
-                <span className="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">
-                  Computed Estimation Slip
+              <div className="w-full bg-[#ffeade]/60 hover:bg-[#ffeade]/80 rounded-2xl p-4 border border-primary/5 text-center mt-4 transition-all" id="estimated-total-container">
+                <span className="text-[10px] text-[#847375] font-extrabold uppercase tracking-widest block">
+                  Estimated Total
                 </span>
-                <span className="font-display text-2xl font-bold text-primary block mt-0.5">
+                <span className="font-display text-2xl font-black text-primary block mt-1 hover:scale-105 transition-transform duration-205">
                   ₹{calculatePrice()}
                 </span>
                 <span className="text-[9px] text-[#847375] font-semibold block uppercase">

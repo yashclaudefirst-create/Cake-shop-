@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { MessageSquare, Send, X, Phone, Mail, Sparkles } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import Menu from './components/Menu';
+import BakingAnimation from './components/BakingAnimation';
 import CakeBuilder from './components/CakeBuilder';
 import Gallery from './components/Gallery';
 import About from './components/About';
@@ -153,6 +155,7 @@ const MOCK_ORDERS: Order[] = [
     },
     customization: {
       category: "cake",
+      shape: "Classic Round",
       size: "Large (2kg)",
       baseFlavor: "Summer Juicy Red Watermelon",
       baseColor: "#2ecc71",
@@ -183,6 +186,7 @@ const MOCK_ORDERS: Order[] = [
     },
     customization: {
       category: "cake",
+      shape: "Classic Round",
       size: "Medium (1kg)",
       baseFlavor: "Velvety Red Velvet Cocoa",
       baseColor: "#ffb6c1",
@@ -385,6 +389,12 @@ export default function App() {
         <Hero onNavClick={handleNavClick} config={websiteConfig} />
       </div>
 
+      {/* 4. Boutique Menu and Selection section */}
+      <Menu />
+
+      {/* 4.5 Auto Baking Simulator Visualizer */}
+      <BakingAnimation />
+
       {/* 5. Custom cake builder (Cake creator) module */}
       <div id="builder">
         <CakeBuilder onOrderAdded={handleOrderAdded} builderOptions={builderOptions} />
@@ -472,7 +482,7 @@ export default function App() {
           {/* Action Tooltip */}
           {!isChatOpen && (
             <span className="absolute right-16 bg-white border border-primary/10 text-primary text-[10px] font-black uppercase tracking-wider px-3.5 py-1.5 rounded-xl shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              Direct Msg Chef 💬
+              Direct Msg Chef
             </span>
           )}
         </button>
@@ -509,7 +519,7 @@ export default function App() {
               <div className="space-y-1 bg-white p-3 rounded-2xl border border-primary/5 text-[11px] leading-relaxed text-slate-700 shadow-2xs">
                 <span className="font-bold text-primary block text-[9.5px] uppercase tracking-wider">Kitchen Outpost</span>
                 <p>
-                  Hari Om! 🍰 Feel free to direct message me with design reference pictures, customized catering queries, eggless variations, or rush delivery requests under Connaught Outpost.
+                  Hari Om! Feel free to direct message me with design reference pictures, customized catering queries, eggless variations, or rush delivery requests under Connaught Outpost.
                 </p>
                 <p className="mt-1 font-bold text-emerald-700">
                   Compose your direct question below and send to WhatsApp!
@@ -526,7 +536,7 @@ export default function App() {
                 onChange={(e) => setChatMessage(e.target.value)}
               />
               <a
-                href={`https://wa.me/919876543210?text=${encodeURIComponent(chatMessage ? `Hi Chef Krish! ${chatMessage}` : 'Hi Krish Dreamy Delight baking kitchen!')}`}
+                href={`https://wa.me/919865621880?text=${encodeURIComponent(chatMessage ? `Hi Chef Krish! ${chatMessage}` : 'Hi Krish Dreamy Delight baking kitchen!')}`}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setChatMessage('')}
@@ -538,8 +548,8 @@ export default function App() {
 
               {/* Direct Fast Outlets */}
               <div className="pt-2 flex justify-between text-[9px] text-[#847375] border-t border-primary/5 font-extrabold uppercase tracking-wide">
-                <a href="tel:+919876543210" className="flex items-center gap-1 hover:text-primary transition-colors">
-                  <Phone size={10} className="text-primary" /> Call +91 98765
+                <a href="tel:+919865621880" className="flex items-center gap-1 hover:text-primary transition-colors">
+                  <Phone size={10} className="text-primary" /> Call +91 98656
                 </a>
                 <a href="mailto:orders@krishdreamydelight.com" className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Mail size={10} className="text-primary" /> Mail Studio
