@@ -77,12 +77,12 @@ const DEFAULT_WEBSITE_CONFIG: WebsiteConfig = {
   heroBadge: "FSSAI Certified Baker",
   heroTitleCursive: "Hand Made",
   heroTitleGradient: "With Pure Love",
-  heroDescription: "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
+  heroDescription: "Lavanya Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
   aboutTag: "Our Baker Story",
   aboutTitle: "Craving for Confectionery Perfection",
-  aboutSubtitle: "At Krish Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
+  aboutSubtitle: "At Lavanya Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
   aboutMainTitle: "Choosy Baking, Small Batch Delicacies & Genuine Care",
-  aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Krish Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
+  aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Lavanya Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
   aboutDesc2: "We sourcing fresh seasonal sweet strawberries, organic eggs, natural Madagascar vanilla pods, and genuine imported cocoa powders. This uncompromising devotion to raw ingredients translates directly into dense, velvety moist finishes that melt on your tongue.",
   card1Title: "FSSAI Certified",
   card1Desc: "Strict sanitary food workspace checks",
@@ -142,13 +142,13 @@ const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
 
 const MOCK_ORDERS: Order[] = [
   {
-    id: "KRISH-70492",
+    id: "LAVANYA-70492",
     createdAt: new Date(Date.now() - 3 * 3600000).toLocaleString(),
     totalPrice: 1980,
     status: "Baking",
     customer: {
-      name: "Krish Malhotra",
-      email: "krish@dreamydelight.com",
+      name: "Lavanya",
+      email: "lavanya@dreamydelight.com",
       phone: "+91-98912-34928",
       address: "M-Block, Greater Kailash 1, New Delhi",
       deliveryType: "delivery"
@@ -173,7 +173,7 @@ const MOCK_ORDERS: Order[] = [
     }
   },
   {
-    id: "KRISH-81204",
+    id: "LAVANYA-81204",
     createdAt: new Date(Date.now() - 24 * 3600000).toLocaleString(),
     totalPrice: 1450,
     status: "Received",
@@ -215,7 +215,7 @@ export default function App() {
   const [isAdminVisible, setIsAdminVisible] = useState(false);
 
   const [websiteConfig, setWebsiteConfig] = useState<WebsiteConfig>(() => {
-    const saved = localStorage.getItem('krish_website_config');
+    const saved = localStorage.getItem('lavanya_website_config') || localStorage.getItem('krish_website_config');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -225,7 +225,7 @@ export default function App() {
   });
 
   const [galleryItems, setGalleryItems] = useState<GalleryItem[]>(() => {
-    const saved = localStorage.getItem('krish_gallery_items');
+    const saved = localStorage.getItem('lavanya_gallery_items') || localStorage.getItem('krish_gallery_items');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -235,7 +235,7 @@ export default function App() {
   });
 
   const [builderOptions, setBuilderOptions] = useState<CakeBuilderOptions>(() => {
-    const saved = localStorage.getItem('krish_builder_options');
+    const saved = localStorage.getItem('lavanya_builder_options') || localStorage.getItem('krish_builder_options');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -246,15 +246,15 @@ export default function App() {
 
   // Track web contents persistence
   useEffect(() => {
-    localStorage.setItem('krish_website_config', JSON.stringify(websiteConfig));
+    localStorage.setItem('lavanya_website_config', JSON.stringify(websiteConfig));
   }, [websiteConfig]);
 
   useEffect(() => {
-    localStorage.setItem('krish_gallery_items', JSON.stringify(galleryItems));
+    localStorage.setItem('lavanya_gallery_items', JSON.stringify(galleryItems));
   }, [galleryItems]);
 
   useEffect(() => {
-    localStorage.setItem('krish_builder_options', JSON.stringify(builderOptions));
+    localStorage.setItem('lavanya_builder_options', JSON.stringify(builderOptions));
   }, [builderOptions]);
 
   // Administrator login authentication states
@@ -305,7 +305,7 @@ export default function App() {
   }, [toast]);
 
   const [orders, setOrders] = useState<Order[]>(() => {
-    const saved = localStorage.getItem('krish_orders_list');
+    const saved = localStorage.getItem('lavanya_orders_list') || localStorage.getItem('krish_orders_list');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -318,7 +318,7 @@ export default function App() {
 
   // Track orders persistence
   useEffect(() => {
-    localStorage.setItem('krish_orders_list', JSON.stringify(orders));
+    localStorage.setItem('lavanya_orders_list', JSON.stringify(orders));
   }, [orders]);
 
   const handleOrderAdded = (newOrder: Order) => {
@@ -498,7 +498,7 @@ export default function App() {
                     Chef
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold leading-tight font-display uppercase tracking-wider">Chef Krish Malhotra</h4>
+                    <h4 className="text-xs font-bold leading-tight font-display uppercase tracking-wider">Chef Lavanya</h4>
                     <span className="text-[9px] text-[#ffb6c1] flex items-center gap-1 font-semibold">
                       <span className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-ping"></span>
                       Studio Live Support (Inquiries)
@@ -530,13 +530,13 @@ export default function App() {
             {/* Customizer DM compositors */}
             <div className="p-4 bg-white space-y-3 text-left">
               <textarea
-                placeholder="Type details / questions to Chef Krish directly..."
+                placeholder="Type details / questions to Chef Lavanya directly..."
                 className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl text-xs font-semibold placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-primary h-16 resize-none"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
               />
               <a
-                href={`https://wa.me/919865621880?text=${encodeURIComponent(chatMessage ? `Hi Chef Krish! ${chatMessage}` : 'Hi Krish Dreamy Delight baking kitchen!')}`}
+                href={`https://wa.me/919865621880?text=${encodeURIComponent(chatMessage ? `Hi Chef Lavanya! ${chatMessage}` : 'Hi Lavanya Dreamy Delight baking kitchen!')}`}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setChatMessage('')}
@@ -551,7 +551,7 @@ export default function App() {
                 <a href="tel:+919865621880" className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Phone size={10} className="text-primary" /> Call +91 98656
                 </a>
-                <a href="mailto:orders@krishdreamydelight.com" className="flex items-center gap-1 hover:text-primary transition-colors">
+                <a href="mailto:orders@lavanyadreamydelight.com" className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Mail size={10} className="text-primary" /> Mail Studio
                 </a>
               </div>

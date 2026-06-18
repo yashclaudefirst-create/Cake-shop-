@@ -53,7 +53,8 @@ export default function AdminDashboard({
   onUpdateBuilderOptions
 }: AdminDashboardProps) {
 
-  const [filterStatus, setFilterStatus] = useState<string>('All');
+  const [filterStatus, setFilterStatus] = useState<string>('All Active');
+  const [ordersSubTab, setOrdersSubTab] = useState<'active' | 'history'>('active');
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -229,12 +230,12 @@ export default function AdminDashboard({
       heroBadge: "FSSAI Certified Baker",
       heroTitleCursive: "Hand Made",
       heroTitleGradient: "With Pure Love",
-      heroDescription: "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
+      heroDescription: "Lavanya Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
       aboutTag: "Our Baker Story",
       aboutTitle: "Craving for Confectionery Perfection",
-      aboutSubtitle: "At Krish Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
+      aboutSubtitle: "At Lavanya Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
       aboutMainTitle: "Choosy Baking, Small Batch Delicacies & Genuine Care",
-      aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Krish Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
+      aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Lavanya Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
       aboutDesc2: "We sourcing fresh seasonal sweet strawberries, organic eggs, natural Madagascar vanilla pods, and genuine imported cocoa powders. This uncompromising devotion to raw ingredients translates directly into dense, velvety moist finishes that melt on your tongue.",
       card1Title: "FSSAI Certified",
       card1Desc: "Strict sanitary food workspace checks",
@@ -259,11 +260,17 @@ export default function AdminDashboard({
     .filter(o => o.status !== 'Cancelled')
     .reduce((sum, o) => sum + o.totalPrice, 0);
 
-  const statuses: (Order['status'] | 'All')[] = ['All', 'Received', 'Preparing', 'Baking', 'Ready for Delivery', 'Completed', 'Cancelled'];
+  const statuses = ordersSubTab === 'active'
+    ? ['All Active', 'Received', 'Preparing', 'Baking', 'Ready for Delivery']
+    : ['All History', 'Completed', 'Cancelled'];
 
-  const filteredOrders = filterStatus === 'All'
-    ? orders
-    : orders.filter(o => o.status === filterStatus);
+  const filteredOrders = ordersSubTab === 'active'
+    ? (filterStatus === 'All Active' || filterStatus === 'All'
+        ? orders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled')
+        : orders.filter(o => o.status === filterStatus))
+    : (filterStatus === 'All History' || filterStatus === 'All'
+        ? orders.filter(o => o.status === 'Completed' || o.status === 'Cancelled')
+        : orders.filter(o => o.status === filterStatus));
 
   return (
     <section 
@@ -814,6 +821,39 @@ export default function AdminDashboard({
         {activeTab === 'orders' && (
           <div className="bg-gradient-to-tr from-[#fff8f5] to-white rounded-3xl border border-primary-container/30 overflow-hidden shadow-sm p-4 md:p-6 animate-fade-in">
             
+            {/* Sub-navigation Segment Selector for Orders tab */}
+            <div className="flex bg-[#fff8f5] p-1.5 rounded-2xl border border-primary/5 max-w-lg mb-6 shadow-2xs gap-1 select-none">
+              <button
+                onClick={() => {
+                  setOrdersSubTab('active');
+                  setFilterStatus('All Active');
+                }}
+                className={`flex-1 py-2.5 px-3 rounded-xl font-display text-[10px] md:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  ordersSubTab === 'active'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-[#847375] hover:text-[#874e58] hover:bg-white/40'
+                }`}
+              >
+                <Hourglass size={14} />
+                Kitchen Queues ({orders.filter(o => o.status !== 'Completed' && o.status !== 'Cancelled').length})
+              </button>
+              
+              <button
+                onClick={() => {
+                  setOrdersSubTab('history');
+                  setFilterStatus('All History');
+                }}
+                className={`flex-1 py-2.5 px-3 rounded-xl font-display text-[10px] md:text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                  ordersSubTab === 'history'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-[#847375] hover:text-[#874e58] hover:bg-white/40'
+                }`}
+              >
+                <CheckCircle size={14} />
+                Order History ({orders.filter(o => o.status === 'Completed' || o.status === 'Cancelled').length})
+              </button>
+            </div>
+
             {/* Internal filters tabs */}
             <div className="flex flex-wrap gap-2 mb-6 items-center border-b border-primary/5 pb-4">
               <span className="font-display text-xs font-bold uppercase text-primary tracking-wider mr-2">

@@ -24,6 +24,7 @@ import {
   Cookie,
   Heart
 } from 'lucide-react';
+import Cake3DPreview from './Cake3DPreview';
 
 const FLAVOUR_GROUPS: Record<string, { name: string; price: number; color: string }[]> = {
   'EVERYDAY CLASSICS': [
@@ -260,97 +261,7 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
     return calculated;
   };
 
-  const darkenColour = (hex: string): string => {
-    return hex + 'CC';
-  };
 
-  const updatePreviewColour = (colour: string) => {
-    ['sv-base', 'sv-top'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.setAttribute('fill', colour);
-    });
-    const dark = darkenColour(colour);
-    ['sv-base-top', 'sv-top-top'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.setAttribute('fill', dark);
-    });
-  };
-
-  const updatePreviewCream = (show: boolean) => {
-    const el = document.getElementById('sv-cream');
-    if (el) el.setAttribute('opacity', show ? '1' : '0');
-  };
-
-  const updatePreviewName = (name: string) => {
-    const el = document.getElementById('sv-name');
-    if (el) el.textContent = name;
-  };
-
-  const updatePreviewTopper = (text: string) => {
-    const el = document.getElementById('sv-topper');
-    if (el) {
-      el.textContent = text;
-      el.setAttribute('opacity', '1');
-    }
-  };
-
-  const updatePreviewDiet = (diet: string) => {
-    const badges: Record<string, string> = {
-      'Egg': 'EGG',
-      'Eggless': 'VEG',
-      'Wheat': 'GF'
-    };
-    const el = document.getElementById('sv-badge');
-    if (el) {
-      el.textContent = badges[diet] || '';
-      el.setAttribute('opacity', '1');
-    }
-  };
-
-  // Live Sync Effect for cake-svg preview elements
-  useEffect(() => {
-    if (customization.baseColor) {
-      updatePreviewColour(customization.baseColor);
-    }
-    
-    // Determine whether cream drops are shown
-    const hasCream = customization.frostingType || (customization.fillings && customization.fillings !== 'None');
-    updatePreviewCream(!!hasCream);
-    
-    // Message label on cake slab
-    updatePreviewName(customization.messageOnCake || '');
-    
-    // Choose premium topping label representing selected toppings
-    let topperLabel = '✦ DELIGHT ✦';
-    if (customization.toppings && customization.toppings.length > 0) {
-      const top = customization.toppings[0];
-      if (top.includes('Gold')) topperLabel = '✦ GOLD ✦';
-      else if (top.includes('Sprinkles')) topperLabel = '✿ SWEETS ✿';
-      else if (top.includes('Flower')) topperLabel = '✿ FLOWERS ✿';
-      else if (top.includes('Butterflies')) topperLabel = '✦ DECORS ✦';
-      else if (top.includes('Ganache')) topperLabel = '✦ GANACHE ✦';
-      else if (top.includes('Macarons')) topperLabel = '✦ MACARONS ✦';
-    }
-    updatePreviewTopper(topperLabel);
-    
-    // Choose badge representing dietary choice
-    let dietType = 'Egg';
-    if (customization.dietary) {
-      if (customization.dietary.includes('Eggless') || customization.dietary.includes('Vegan')) {
-        dietType = 'Eggless';
-      } else if (customization.dietary.includes('Gluten-Free')) {
-        dietType = 'Wheat';
-      }
-    }
-    updatePreviewDiet(dietType);
-  }, [
-    customization.baseColor,
-    customization.messageOnCake,
-    customization.toppings,
-    customization.fillings,
-    customization.frostingType,
-    customization.dietary
-  ]);
 
   // Step Navigators
   const nextStep = () => {
@@ -745,7 +656,7 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
             <div className="pt-2 space-y-3">
               <a
                 href={(() => {
-                  const orderDetails = `Hi Krish Dreamy Delight!
+                  const orderDetails = `Hi Lavanya Dreamy Delight!
 I want to place an order:
 
 - Category: ${submittedOrder.customization.category}
@@ -1510,81 +1421,7 @@ Please confirm availability!`;
                 {/* Visual shadow glow */}
                 <div className="w-52 h-6 bg-primary/10 rounded-full blur-md absolute bottom-2 pointer-events-none" />
 
-                <svg 
-                  id="cake-svg" 
-                  viewBox="0 0 200 220"
-                  width="200" 
-                  height="220"
-                  className="relative z-10 filter drop-shadow-md"
-                >
-                  <rect 
-                    id="sv-base" 
-                    x="20" y="140" 
-                    width="160" height="60"
-                    rx="8" fill="#FFB6C1"
-                    style={{ transition: 'fill 0.5s' }}
-                  />
-                    
-                  <ellipse 
-                    id="sv-base-top"
-                    cx="100" cy="140"
-                    rx="80" ry="12"
-                    fill="#FF69B4"
-                    style={{ transition: 'fill 0.5s' }}
-                  />
-                    
-                  <rect 
-                    id="sv-top"
-                    x="45" y="90"
-                    width="110" height="50"
-                    rx="8" fill="#FFB6C1"
-                    style={{ transition: 'fill 0.5s' }}
-                  />
-                    
-                  <ellipse 
-                    id="sv-top-top"
-                    cx="100" cy="90"
-                    rx="55" ry="10"
-                    fill="#FF69B4"
-                    style={{ transition: 'fill 0.5s' }}
-                  />
-                    
-                  <rect 
-                    id="sv-cream"
-                    x="45" y="83"
-                    width="110" height="10"
-                    rx="5" fill="white"
-                    opacity="0"
-                    style={{ transition: 'opacity 0.5s' }}
-                  />
-                    
-                  <text 
-                    id="sv-name"
-                    x="100" y="175"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fontFamily="cursive"
-                    fill="white"
-                    fontWeight="bold"
-                  />
-                    
-                  <text 
-                    id="sv-topper"
-                    x="100" y="70"
-                    textAnchor="middle"
-                    fontSize="20"
-                    opacity="0"
-                    style={{ transition: 'opacity 0.3s' }}
-                  />
-                    
-                  <text 
-                    id="sv-badge"
-                    x="170" y="155"
-                    fontSize="14"
-                    opacity="0"
-                    style={{ transition: 'opacity 0.3s' }}
-                  />
-                </svg>
+                <Cake3DPreview customization={customization} />
               </div>
 
               {/* Computed live invoice ticker badge pricing */}
