@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
-import { CakeCustomization, CustomerDetails, Order, CakeBuilderOptions } from '../types';
+import { CakeCustomization, CustomerDetails, Order, CakeBuilderOptions, WebsiteConfig } from '../types';
 import { 
   Cake as CakeIcon, 
   ChevronLeft, 
@@ -91,6 +91,7 @@ const getFlavorPriceAndColor = (flavorName: string) => {
 interface CakeBuilderProps {
   onOrderAdded: (newOrder: Order) => void;
   builderOptions?: CakeBuilderOptions;
+  websiteConfig?: WebsiteConfig;
 }
 
 const INITIAL_CUSTOMER: CustomerDetails = {
@@ -101,7 +102,7 @@ const INITIAL_CUSTOMER: CustomerDetails = {
   deliveryType: 'pickup'
 };
 
-export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilderProps) {
+export default function CakeBuilder({ onOrderAdded, builderOptions, websiteConfig }: CakeBuilderProps) {
   // Safe fallback to match original values if no custom ones are stored
   const options = builderOptions || {
     sizes: [
@@ -619,11 +620,13 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
               <h3 className="font-display text-2xl font-bold text-primary">
                 Your Baking Slot is Booked!
               </h3>
-              <p className="font-sans text-xs text-on-surface-variant">
-                We've locked in your recipe slot. A sweet confirmation slip has been logged under ID: <strong className="text-primary font-bold">{submittedOrder.id}</strong>.
+              <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
+                {websiteConfig?.customerAutoMsg 
+                  ? websiteConfig.customerAutoMsg.replace('{orderId}', submittedOrder.id)
+                  : `We've locked in your recipe slot. A sweet confirmation slip has been logged under ID: ${submittedOrder.id}.`}
               </p>
             </div>
-
+            
             {/* Structured Recipe Summary */}
             <div className="bg-[#fff8f5] p-5 rounded-2xl text-left border border-primary-container/20 text-xs space-y-2 font-mono divide-y divide-primary-container/20">
               <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Baker Code:</span> <span className="font-bold text-primary">{submittedOrder.id}</span></div>
@@ -656,7 +659,22 @@ export default function CakeBuilder({ onOrderAdded, builderOptions }: CakeBuilde
             <div className="pt-2 space-y-3">
               <a
                 href={(() => {
-                  const orderDetails = `Hi Lavanya Dreamy Delight!
+                  const adminPhoneNum = websiteConfig?.whatsappNumber || "919865621880";
+                  let orderDetails = "";
+                  if (websiteConfig?.whatsappMsgTemplate) {
+                    orderDetails = websiteConfig.whatsappMsgTemplate
+                      .replace(/{category}/g, submittedOrder.customization.category)
+                      .replace(/{flavor}/g, submittedOrder.customization.baseFlavor)
+                      .replace(/{price}/g, String(submittedOrder.totalPrice))
+                      .replace(/{shape}/g, submittedOrder.customization.shape)
+                      .replace(/{size}/g, submittedOrder.customization.size)
+                      .replace(/{cream}/g, submittedOrder.customization.frostingType)
+                      .replace(/{toppings}/g, submittedOrder.customization.toppings.join(', ') || 'None')
+                      .replace(/{diet}/g, submittedOrder.customization.dietary)
+                      .replace(/{message}/g, submittedOrder.customization.messageOnCake || 'None')
+                      .replace(/{deliveryDate}/g, submittedOrder.customization.deliveryDate);
+                  } else {
+                    orderDetails = `Hi Lavanya Dreamy Delight!
 I want to place an order:
 
 - Category: ${submittedOrder.customization.category}
@@ -674,7 +692,8 @@ I want to place an order:
 - Delivery date: ${submittedOrder.customization.deliveryDate}
 
 Please confirm availability!`;
-                  return `https://wa.me/919865621880?text=${encodeURIComponent(orderDetails)}`;
+                  }
+                  return `https://wa.me/${adminPhoneNum.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(orderDetails)}`;
                 })()}
                 target="_blank"
                 rel="noreferrer"
@@ -754,6 +773,48 @@ Please confirm availability!`;
                 {/* STEP 1: Category Selection */}
                 {step === 1 && (
                   <div className="space-y-4 animate-fadeIn">
+                    {/* Chat Analysis / Custom Preset Trigger */}
+                    <div className="bg-gradient-to-r from-pink-50 to-amber-50 border-2 border-pink-200 rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs mb-6">
+                      <div className="text-left space-y-1.5 flex-1">
+                        <span className="bg-pink-100 text-pink-700 text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-2xs select-none">
+                          <Sparkles className="w-3 h-3 fill-current" /> Chat Request Recipe Loaded
+                        </span>
+                        <h4 className="font-display text-base font-black text-[#5C2A31]">
+                          Manju Akka's Homemade Chocolate Drip Cake
+                        </h4>
+                        <p className="font-sans text-[11.5px] leading-relaxed text-slate-700">
+                          We analyzed your chat reference! This loads the exact recipe discussed: <strong>Egg-based, soft chocolate sponge, Belgian fudge layer filling, rich dark chocolate drip, cream rosettes, and "HAPPY BIRTHDAY APPA" placard. No premixes or preservatives!</strong>
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomization({
+                            category: 'cake',
+                            shape: 'Classic Round',
+                            size: '1kg Portion (approx. 8-12 servings)',
+                            baseFlavor: 'Chocolate Truffles',
+                            baseColor: '#2C1810',
+                            baseColorName: 'Chocolate Truffles',
+                            dietary: 'Standard Cream Base',
+                            fillings: 'Belgian Fudge',
+                            sweetness: 'Standard Sweetness',
+                            frostingType: 'Light Whipped Frosting',
+                            toppings: ['Chocolate Ganache Drip'],
+                            occasion: 'Birthday Celebration',
+                            messageOnCake: 'HAPPY BIRTHDAY APPA',
+                            deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                            deliveryTimeSlot: 'Evening Twilight (06:00 PM - 09:00 PM)',
+                            specialInstructions: 'Manju Akka\'s Recipe: Prepared completely from scratch using flour, sugar, milk, fresh eggs, and high-fat cocoa powder. STRICTLY egg-based. ABSOLUTELY NO stabilizers, cake gels, premix, or artificial preservatives as discussed.'
+                          });
+                          setStep(14); // Jump directly to Review & Checkout
+                        }}
+                        className="px-5 py-3 bg-[#e0566d] hover:bg-[#c93b52] active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all cursor-pointer whitespace-nowrap shadow-md hover:shadow-lg hover:translate-y-[-1px] select-none shrink-0"
+                      >
+                        Load Recipe Preset
+                      </button>
+                    </div>
+
                     <h3 className="font-display font-bold text-lg text-primary">Choose Your Desserts Base</h3>
                     <p className="font-sans text-xs text-on-surface-variant">
                       Choose from our whimsical range of sweet bakes, customized fresh to order.

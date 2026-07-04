@@ -33,6 +33,7 @@ export default function Menu() {
       { name: 'Tender Coconut', price: 1250 }
     ],
     'Chocolate & Fusion': [
+      { name: "Manju Akka's Signature Chocolate Drip", price: 950 },
       { name: 'Chocolate Truffles', price: 1150 },
       { name: 'White Truffle', price: 1250 },
       { name: 'Oreo Truffle', price: 1250 },

@@ -244,7 +244,24 @@ export default function AdminDashboard({
       card3Title: "Artisan Crafting",
       card3Desc: "Tailored ribbons & handwritten letters",
       card4Title: "Baked to Hour",
-      card4Desc: "Dispatched warm within 3 hrs of setup"
+      card4Desc: "Dispatched warm within 3 hrs of setup",
+      whatsappNumber: "919865621880",
+      whatsappMsgTemplate: `Hi Lavanya Dreamy Delight!
+I want to place an order:
+
+- Category: {category}
+- Flavour: {flavor}
+- Price: ₹{price}
+- Shape: {shape}
+- Size: {size}
+- Cream: {cream}
+- Toppings: {toppings}
+- Diet: {diet}
+- Name on cake: {message}
+- Delivery date: {deliveryDate}
+
+Please confirm availability!`,
+      customerAutoMsg: "We've locked in your recipe slot. A sweet confirmation slip has been logged under ID: {orderId}. We will reach out to you shortly via WhatsApp to confirm details!"
     };
     setEditedConfig(defaults);
     onSaveConfig(defaults);
@@ -651,6 +668,62 @@ export default function AdminDashboard({
                     />
                   </div>
 
+                </div>
+              </div>
+
+              {/* Grid 4: WhatsApp and Auto Message Settings */}
+              <div className="space-y-4 pt-4 border-t border-[#d6c2c3]/20">
+                <h4 className="font-display text-sm font-bold uppercase tracking-wider text-primary border-l-2 border-primary pl-2.5">
+                  4. WhatsApp & Customer Auto Messaging Controls
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5 md:col-span-1">
+                    <label className="text-[10px] font-black uppercase text-[#874e58] tracking-widest block font-sans">WhatsApp Contact Number (No spaces/symbols)</label>
+                    <input
+                      type="text"
+                      className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl font-sans text-xs font-semibold focus:outline-primary font-mono"
+                      placeholder="e.g. 919865621880"
+                      value={editedConfig.whatsappNumber || ''}
+                      onChange={(e) => setEditedConfig(prev => ({ ...prev, whatsappNumber: e.target.value }))}
+                    />
+                    <span className="text-[9px] text-[#847375] block mt-1">Country code first. E.g. 919865621880 for India.</span>
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <label className="text-[10px] font-black uppercase text-[#874e58] tracking-widest block font-sans">Customer Auto Success Msg (Priced confirmation slip block)</label>
+                    <textarea
+                      rows={2}
+                      className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl font-sans text-xs font-semibold focus:outline-primary"
+                      placeholder="e.g. We've locked in your recipe slot..."
+                      value={editedConfig.customerAutoMsg || ''}
+                      onChange={(e) => setEditedConfig(prev => ({ ...prev, customerAutoMsg: e.target.value }))}
+                    />
+                    <span className="text-[9px] text-[#847375] block">Use <code className="font-mono bg-pink-100 text-pink-700 px-1 rounded">{'{orderId}'}</code> to automatically insert the unique order id.</span>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black uppercase text-[#874e58] tracking-widest block font-sans">WhatsApp DM Message Template</label>
+                  <textarea
+                    rows={8}
+                    className="w-full p-3 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl font-mono text-xs font-semibold focus:outline-primary"
+                    placeholder="Enter template text"
+                    value={editedConfig.whatsappMsgTemplate || ''}
+                    onChange={(e) => setEditedConfig(prev => ({ ...prev, whatsappMsgTemplate: e.target.value }))}
+                  />
+                  <div className="text-[9px] text-[#847375] leading-relaxed">
+                    You can customize the WhatsApp DM text sent by customers. Use the following dynamic placeholder tokens:
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 font-mono">
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{category}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{flavor}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{price}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{shape}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{size}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{cream}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{toppings}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{diet}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{message}"}</span>
+                      <span className="bg-[#ffeade] text-primary px-1.5 py-0.5 rounded">{"{deliveryDate}"}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

@@ -91,10 +91,34 @@ const DEFAULT_WEBSITE_CONFIG: WebsiteConfig = {
   card3Title: "Artisan Crafting",
   card3Desc: "Tailored ribbons & handwritten letters",
   card4Title: "Baked to Hour",
-  card4Desc: "Dispatched warm within 3 hrs of setup"
+  card4Desc: "Dispatched warm within 3 hrs of setup",
+  whatsappNumber: "919865621880",
+  whatsappMsgTemplate: `Hi Lavanya Dreamy Delight!
+I want to place an order:
+
+- Category: {category}
+- Flavour: {flavor}
+- Price: ₹{price}
+- Shape: {shape}
+- Size: {size}
+- Cream: {cream}
+- Toppings: {toppings}
+- Diet: {diet}
+- Name on cake: {message}
+- Delivery date: {deliveryDate}
+
+Please confirm availability!`,
+  customerAutoMsg: "We've locked in your recipe slot. A sweet confirmation slip has been logged under ID: {orderId}. We will reach out to you shortly via WhatsApp to confirm details!"
 };
 
 const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
+  {
+    id: "gal-custom-akka",
+    title: "Manju Akka's Signature Chocolate Drip Cake",
+    category: "Cakes",
+    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=60",
+    description: "A gorgeous premium home-baked celebration cake crafted completely from scratch with flour, sugar, milk, fresh eggs, and rich cocoa powder. Strictly contains no premixes, no cake gels, and no preservatives. Adorned with delicate cocoa rosettes, dark chocolate drip, and a customizable central white chocolate message plate."
+  },
   {
     id: "gal-1",
     title: "Signature Strawberry Luxury Peak",
@@ -397,7 +421,7 @@ export default function App() {
 
       {/* 5. Custom cake builder (Cake creator) module */}
       <div id="builder">
-        <CakeBuilder onOrderAdded={handleOrderAdded} builderOptions={builderOptions} />
+        <CakeBuilder onOrderAdded={handleOrderAdded} builderOptions={builderOptions} websiteConfig={websiteConfig} />
       </div>
 
       {/* 6. Creations catalog gallery showcase */}

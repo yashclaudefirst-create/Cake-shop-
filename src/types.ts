@@ -99,4 +99,7 @@ export interface WebsiteConfig {
   card3Desc: string;
   card4Title: string;
   card4Desc: string;
+  whatsappNumber?: string;
+  whatsappMsgTemplate?: string;
+  customerAutoMsg?: string;
 }

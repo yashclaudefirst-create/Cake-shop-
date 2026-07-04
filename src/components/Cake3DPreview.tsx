@@ -215,6 +215,41 @@ export default function Cake3DPreview({ customization }: Cake3DPreviewProps) {
          if ((category === 'cupcake' || category === 'muffin') && isBottom) tierColor = '#E3C19F'; // Cupcake wrapper
          
          const { topY } = draw3DShape(currentY, tier.h, tier.r, tierColor, darkenColor(tierColor, 0.1));
+
+         // Chocolate drip effect
+         const hasDrip = customization.toppings && customization.toppings.some(t => t.includes('Ganache') || t.includes('Drip'));
+         if (hasDrip && category === 'cake') {
+            ctx.fillStyle = '#2C1100'; // Rich dark chocolate drip
+            const ptCount = isHeart ? 50 : (isSquare ? 4 : 40);
+            const pts = getShapePoints(tier.r + 0.8, ptCount, -angle);
+            
+            // Draw waves
+            ctx.beginPath();
+            ctx.moveTo(pts[0].x, topY + pts[0].y);
+            for (let i = 1; i < ptCount; i++) {
+               ctx.lineTo(pts[i].x, topY + pts[i].y);
+            }
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw drip lines & drops
+            pts.forEach((pt, i) => {
+               if (pt.y > 0 && i % 3 === 0) {
+                  const dripLength = 8 + Math.sin(i * 1.5 + index * 5) * 5;
+                  ctx.beginPath();
+                  ctx.arc(pt.x, topY + pt.y + dripLength, 2.5, 0, Math.PI * 2);
+                  ctx.fill();
+                  
+                  ctx.beginPath();
+                  ctx.moveTo(pt.x - 2.5, topY + pt.y);
+                  ctx.lineTo(pt.x + 2.5, topY + pt.y);
+                  ctx.lineTo(pt.x + 1.5, topY + pt.y + dripLength);
+                  ctx.lineTo(pt.x - 1.5, topY + pt.y + dripLength);
+                  ctx.closePath();
+                  ctx.fill();
+               }
+            });
+         }
          
          const hasCream = customization.frostingType || (customization.fillings && customization.fillings !== 'None');
          if (hasCream && category !== 'cookies' && category !== 'brownie' && category !== 'cupcake' && category !== 'muffin') {
@@ -235,15 +270,37 @@ export default function Cake3DPreview({ customization }: Cake3DPreviewProps) {
       });
 
       if (customization.messageOnCake && category !== 'cupcake' && category !== 'muffin') {
-        ctx.fillStyle = category === 'brownie' || category === 'cookies' ? '#FFFFFF' : '#5C3A21';
-        ctx.font = 'bold 12px "Inter", sans-serif';
-        ctx.textAlign = 'center';
-        
         ctx.save();
         ctx.translate(cx, topYPos);
         ctx.scale(1, 0.4);
         ctx.rotate(-angle);
-        ctx.fillText(customization.messageOnCake, 0, 5);
+
+        // Draw white chocolate plate
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.96)';
+        ctx.strokeStyle = '#D7CCC8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        
+        ctx.font = 'bold 11px "Inter", sans-serif';
+        const textWidth = ctx.measureText(customization.messageOnCake).width;
+        const plaqueRadius = Math.max(26, textWidth / 2 + 10);
+        ctx.arc(0, 0, plaqueRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw text
+        ctx.fillStyle = '#3E2723'; // Dark brown chocolate text
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 10px "Inter", sans-serif';
+        ctx.fillText(customization.messageOnCake, 0, 3);
+
+        // Draw small red heart underneath if it mentions APPA or BIRTHDAY
+        if (customization.messageOnCake.toUpperCase().includes('APPA') || customization.messageOnCake.toUpperCase().includes('BIRTHDAY')) {
+          ctx.fillStyle = '#E53935'; // Soft red
+          ctx.font = 'bold 8px "Inter", sans-serif';
+          ctx.fillText('♥', 0, 12);
+        }
+
         ctx.restore();
       }
 
