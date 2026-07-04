@@ -22,7 +22,9 @@ import {
   Store,
   MessageSquare,
   Cookie,
-  Heart
+  Heart,
+  Share2,
+  Copy
 } from 'lucide-react';
 import Cake3DPreview from './Cake3DPreview';
 
@@ -189,6 +191,58 @@ export default function CakeBuilder({ onOrderAdded, builderOptions, websiteConfi
   const [customer, setCustomer] = useState<CustomerDetails>(INITIAL_CUSTOMER);
   const [validationError, setValidationError] = useState('');
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+
+  const getShareSummaryText = (orderData?: Order) => {
+    const activeCustomization = orderData ? orderData.customization : customization;
+    const activePrice = orderData ? orderData.totalPrice : calculatePrice();
+    const toppingsStr = activeCustomization.toppings.length > 0 ? activeCustomization.toppings.join(', ') : 'None';
+    
+    return `🎂 *My Custom Confection on Lavanya's Dreamy Delight* 🎂
+
+- *Category*: ${activeCustomization.category.toUpperCase()}
+- *Flavour*: ${activeCustomization.baseFlavor}
+- *Shape*: ${activeCustomization.shape}
+- *Size*: ${activeCustomization.size}
+- *Cream*: ${activeCustomization.frostingType}
+- *Color*: ${activeCustomization.baseColorName}
+- *Toppings*: ${toppingsStr}
+- *Diet*: ${activeCustomization.dietary}
+- *Occasion*: ${activeCustomization.occasion}
+- *Inscription*: "${activeCustomization.messageOnCake || 'None'}"
+- *Estimated Price*: ₹${activePrice}
+
+Designed using Lavanya's Dreamy Delight's interactive Cake Builder! Check it out: ${window.location.origin}`;
+  };
+
+  const handleShareCreation = async (orderData?: Order) => {
+    const summaryText = getShareSummaryText(orderData);
+    const shareData = {
+      title: "My Custom Dreamy Delight Design",
+      text: summaryText,
+      url: window.location.origin
+    };
+
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.warn("Native share failed or dismissed", err);
+        setShowShareOptions(true);
+      }
+    } else {
+      setShowShareOptions(true);
+    }
+  };
+
+  const handleCopyShareText = (orderData?: Order) => {
+    const text = getShareSummaryText(orderData);
+    navigator.clipboard.writeText(text).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 3000);
+    });
+  };
 
   // GSAP Baking Sequence state indicators
   const [isBaking, setIsBaking] = useState(false);
@@ -702,6 +756,15 @@ Please confirm availability!`;
                 <MessageSquare size={14} className="stroke-[2.5]" />
                 Direct Message Order details to Baker (WhatsApp DM)
               </a>
+
+              <button
+                type="button"
+                onClick={() => handleShareCreation(submittedOrder)}
+                className="w-full py-3 bg-[#e0566d] hover:bg-[#c93b52] text-white text-xs font-bold uppercase rounded-full shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer text-center"
+              >
+                <Share2 size={14} />
+                Share My Recipe & Receipt Details
+              </button>
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -1498,8 +1561,91 @@ Please confirm availability!`;
                 </span>
               </div>
 
+              {/* Share my creation button */}
+              <button
+                type="button"
+                onClick={() => handleShareCreation()}
+                className="w-full mt-3 py-2.5 bg-[#e0566d] hover:bg-[#c93b52] active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+              >
+                <Share2 size={13} />
+                Share My Custom Design
+              </button>
+
             </div>
 
+          </div>
+        )}
+
+        {/* Share Modal Dialog */}
+        {showShareOptions && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 animate-fadeIn">
+            <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-primary-container shadow-xl space-y-4 text-left relative overflow-hidden">
+              <div className="flex justify-between items-center border-b border-[#d6c2c3]/20 pb-3">
+                <h3 className="font-display text-base font-black text-[#5C2A31] flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-primary" />
+                  Share Your Sweet Design
+                </h3>
+                <button 
+                  onClick={() => setShowShareOptions(false)}
+                  className="text-slate-400 hover:text-slate-600 font-bold font-sans text-lg focus:outline-none cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="font-sans text-[11px] leading-relaxed text-slate-600">
+                Select one of the channels below to instantly share a summary of your beautifully designed customized confection with family, friends, or for orders!
+              </p>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-[#874e58] tracking-widest block font-sans">
+                  Confection Design Summary
+                </label>
+                <textarea
+                  readOnly
+                  rows={6}
+                  className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl font-mono text-[10.5px] leading-relaxed text-slate-700 focus:outline-none"
+                  value={getShareSummaryText(submittedOrder || undefined)}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(getShareSummaryText(submittedOrder || undefined))}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <MessageSquare size={12} />
+                  WhatsApp
+                </a>
+
+                <a
+                  href={`mailto:?subject=${encodeURIComponent("Check out my custom cake design!")}&body=${encodeURIComponent(getShareSummaryText(submittedOrder || undefined))}`}
+                  className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Mail size={12} />
+                  Email
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleCopyShareText(submittedOrder || undefined)}
+                  className="py-2.5 px-3 bg-primary hover:bg-[#6b3741] active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                >
+                  <Copy size={12} />
+                  {shareCopied ? "Copied!" : "Copy Text"}
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowShareOptions(false)}
+                className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl text-center transition-all cursor-pointer"
+              >
+                Close Panel
+              </button>
+            </div>
           </div>
         )}
       </div>
