@@ -21,7 +21,12 @@ interface Particle {
   life: number;
 }
 
-export default function BakingAnimation() {
+interface BakingAnimationProps {
+  isAdminAuthenticated?: boolean;
+  onLoginClick?: () => void;
+}
+
+export default function BakingAnimation({ isAdminAuthenticated = false, onLoginClick }: BakingAnimationProps) {
   const [currentStage, setCurrentStage] = useState<number>(4);
   const [isAutoRotating, setIsAutoRotating] = useState<boolean>(true);
   const [flavourType, setFlavourType] = useState<'vanilla' | 'chocolate' | 'strawberry'>('strawberry');
@@ -634,7 +639,31 @@ export default function BakingAnimation() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
           
           {/* Controls Panel left column */}
-          <div className="lg:col-span-4 flex flex-col justify-between gap-5 bg-white border border-primary-container/20 rounded-3xl p-6 shadow-pink text-left">
+          <div className="lg:col-span-4 relative overflow-hidden flex flex-col justify-between gap-5 bg-white border border-primary-container/20 rounded-3xl p-6 shadow-pink text-left">
+            {/* Owner Lock Overlay */}
+            {!isAdminAuthenticated && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center p-6 text-center animate-fadeIn">
+                <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center text-[#e0566d] mb-4 shadow-md animate-bounce">
+                  <Settings className="w-6 h-6 animate-spin-slow" />
+                </div>
+                <span className="bg-pink-100 text-[#e0566d] text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-2xs select-none mb-2">
+                  🔒 Owner Access Only
+                </span>
+                <h4 className="font-display text-sm font-black text-[#5C2A31]">
+                  Laboratory Controls Locked
+                </h4>
+                <p className="font-sans text-[11px] leading-relaxed text-slate-600 mt-2 max-w-[220px]">
+                  Only the bakery owner or Head Pastry Chef can adjust sponge flavors, skip simulation blueprints, and monitor vector outputs.
+                </p>
+                <button
+                  type="button"
+                  onClick={onLoginClick}
+                  className="mt-5 px-4 py-2.5 bg-[#e0566d] hover:bg-[#c93b52] active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg hover:translate-y-[-1px] select-none shrink-0 animate-pulse"
+                >
+                  Authenticate as Owner
+                </button>
+              </div>
+            )}
             <div className="space-y-4">
               <div className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-widest">
                 <Settings className="w-4 h-4 animate-spin-slow text-primary" /> Laboratory Controls

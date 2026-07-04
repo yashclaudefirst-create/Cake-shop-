@@ -417,7 +417,10 @@ export default function App() {
       <Menu />
 
       {/* 4.5 Auto Baking Simulator Visualizer */}
-      <BakingAnimation />
+      <BakingAnimation 
+        isAdminAuthenticated={isAdminAuthenticated} 
+        onLoginClick={() => setIsLoginVisible(true)} 
+      />
 
       {/* 5. Custom cake builder (Cake creator) module */}
       <div id="builder">
