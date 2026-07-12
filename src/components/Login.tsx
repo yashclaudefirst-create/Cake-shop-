@@ -35,7 +35,7 @@ export default function Login({ onLoginSuccess, onClose }: LoginProps) {
       return;
     }
 
-    if (password !== 'LaddoooMottu1005') {
+    if (password !== 'BhairavDhakshith100511') {
       setError('Invalid password. Check the password and try again.');
       return;
     }

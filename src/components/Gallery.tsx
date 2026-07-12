@@ -14,7 +14,7 @@ export default function Gallery({ items }: GalleryProps) {
   const galleryItems = items || [];
 
 
-  const filters = ['All', 'Cakes', 'Brownies', 'Special Cakes'];
+  const filters = ['All', 'Cakes', 'Cookies', 'Brownies', 'Special Cakes'];
 
   const filteredItems = selectedFilter === 'All'
     ? galleryItems

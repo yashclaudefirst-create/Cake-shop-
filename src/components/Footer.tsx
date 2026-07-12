@@ -82,7 +82,7 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
             <div className="flex items-center gap-2"><MapPin size={13} className="text-primary" /> Connaught Outpost, Central New Delhi</div>
             <div className="flex items-center gap-2"><Mail size={13} className="text-primary" /> orders@lavanyadreamydelight.com</div>
             <div className="flex items-center gap-2"><Phone size={13} className="text-primary" /> WhatsApp: +91 98656 21880</div>
-            <div className="flex items-center gap-2"><span className="text-primary font-bold text-[13px] leading-none ml-[2px]">@</span> Instagram: @lavanya_dreamy_delights</div>
+            <div className="flex items-center gap-2"><span className="text-primary font-bold text-[13px] leading-none ml-[2px]">@</span> Instagram: <a href="https://www.instagram.com/krish_dreamy_delights?igsh=MWQxb2NlNHJnMzhoYg==" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline transition-all">@krish_dreamy_delights</a></div>
           </div>
           
           <div className="pt-4 border-t border-primary/5 text-[10px] text-zinc-400 font-normal">

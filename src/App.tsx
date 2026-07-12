@@ -11,6 +11,10 @@ import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import Footer from './components/Footer';
 import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions } from './types';
+import appaBirthdayCake from './assets/images/appa_birthday_cake_1783832148907.jpg';
+import cookiesBakingTray from './assets/images/cookies_baking_tray_1783835040357.jpg';
+import flowerCookiesPackaged from './assets/images/flower_cookies_packaged_1783835024228.jpg';
+import vishakanChocolateCake from './assets/images/vishakan_chocolate_cake_1783835056010.jpg';
 
 const DEFAULT_BUILDER_OPTIONS: CakeBuilderOptions = {
   sizes: [
@@ -114,10 +118,31 @@ Please confirm availability!`,
 const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
   {
     id: "gal-custom-akka",
-    title: "Manju Akka's Signature Chocolate Drip Cake",
+    title: "Appa's Special Birthday Chocolate Drip Cake",
     category: "Cakes",
-    image: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=800&auto=format&fit=crop&q=60",
-    description: "A gorgeous premium home-baked celebration cake crafted completely from scratch with flour, sugar, milk, fresh eggs, and rich cocoa powder. Strictly contains no premixes, no cake gels, and no preservatives. Adorned with delicate cocoa rosettes, dark chocolate drip, and a customizable central white chocolate message plate."
+    image: appaBirthdayCake,
+    description: "A gorgeous premium home-baked celebration cake crafted completely from scratch with flour, sugar, milk, fresh eggs, and rich cocoa powder. Strictly contains no premixes, no cake gels, and no preservatives. Adorned with delicate cocoa/chocolate-whipped rosettes, rich dark chocolate drip, and a customizable central white chocolate 'Happy Birthday APPA' message plate."
+  },
+  {
+    id: "gal-custom-vishakan",
+    title: "Custom KM Vishakan Chocolate Rosette Cake",
+    category: "Cakes",
+    image: vishakanChocolateCake,
+    description: "An absolute chocolate showstopper! Rich chocolate ganache drip cake decorated with smooth cocoa/chocolate-whipped rosettes, beautiful drip sides, and a custom golden birthday inscription on a chocolate board."
+  },
+  {
+    id: "gal-custom-cookies-tray",
+    title: "Freshly Baked Cashew Butter Cookies",
+    category: "Cookies",
+    image: cookiesBakingTray,
+    description: "Our signature home-baked butter biscuits loaded with rich, finely roasted cashews and almonds. Baked to golden perfection on parchment paper with 100% pure dairy butter."
+  },
+  {
+    id: "gal-custom-cookies-packaged",
+    title: "Flower-Shaped Nutty Shortbread Box",
+    category: "Cookies",
+    image: flowerCookiesPackaged,
+    description: "Cute, flower-shaped crumbly premium shortbread cookies topped with finely crushed almonds, cashews, and pistachios. Hand-packaged in beautiful clear gift boxes with our custom cartoon chef label."
   },
   {
     id: "gal-1",
@@ -252,7 +277,26 @@ export default function App() {
     const saved = localStorage.getItem('lavanya_gallery_items') || localStorage.getItem('krish_gallery_items');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved) as GalleryItem[];
+        const updatedParsed = parsed.map(item => {
+          const match = DEFAULT_GALLERY_ITEMS.find(d => d.id === item.id);
+          if (match) {
+            return {
+              ...item,
+              title: match.title,
+              category: match.category,
+              image: match.image,
+              description: match.description
+            };
+          }
+          return item;
+        });
+
+        // Ensure newly introduced items in default gallery (not found in current localStorage by ID) are appended
+        const parsedIds = new Set(parsed.map(item => item.id));
+        const newDefaults = DEFAULT_GALLERY_ITEMS.filter(item => !parsedIds.has(item.id));
+        
+        return [...updatedParsed, ...newDefaults];
       } catch (e) {}
     }
     return DEFAULT_GALLERY_ITEMS;

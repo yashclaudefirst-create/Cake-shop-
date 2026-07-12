@@ -777,7 +777,8 @@ Please confirm availability!`,
                       onChange={(e) => setNewCategory(e.target.value)}
                     >
                       <option value="Cakes">Cakes</option>
-                      <option value="Brownies font-sans">Brownies</option>
+                      <option value="Cookies">Cookies</option>
+                      <option value="Brownies">Brownies</option>
                       <option value="Special Cakes">Special Cakes</option>
                     </select>
                   </div>
