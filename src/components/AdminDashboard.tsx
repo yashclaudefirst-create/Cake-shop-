@@ -243,12 +243,12 @@ export default function AdminDashboard({
       heroBadge: "FSSAI Certified Baker",
       heroTitleCursive: "Hand Made",
       heroTitleGradient: "With Pure Love",
-      heroDescription: "Lavanya Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
+      heroDescription: "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
       aboutTag: "Our Baker Story",
       aboutTitle: "Craving for Confectionery Perfection",
-      aboutSubtitle: "At Lavanya Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
+      aboutSubtitle: "At Krish Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
       aboutMainTitle: "Choosy Baking, Small Batch Delicacies & Genuine Care",
-      aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Lavanya Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
+      aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Krish Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
       aboutDesc2: "We sourcing fresh seasonal sweet strawberries, organic eggs, natural Madagascar vanilla pods, and genuine imported cocoa powders. This uncompromising devotion to raw ingredients translates directly into dense, velvety moist finishes that melt on your tongue.",
       card1Title: "FSSAI Certified",
       card1Desc: "Strict sanitary food workspace checks",
@@ -259,7 +259,7 @@ export default function AdminDashboard({
       card4Title: "Baked to Hour",
       card4Desc: "Dispatched warm within 3 hrs of setup",
       whatsappNumber: "919865621880",
-      whatsappMsgTemplate: `Hi Lavanya Dreamy Delight!
+      whatsappMsgTemplate: `Hi Krish Dreamy Delight!
 I want to place an order:
 
 - Category: {category}

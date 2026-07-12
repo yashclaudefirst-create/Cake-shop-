@@ -199,7 +199,7 @@ export default function CakeBuilder({ onOrderAdded, builderOptions, websiteConfi
     const activePrice = orderData ? orderData.totalPrice : calculatePrice();
     const toppingsStr = activeCustomization.toppings.length > 0 ? activeCustomization.toppings.join(', ') : 'None';
     
-    return `🎂 *My Custom Confection on Lavanya's Dreamy Delight* 🎂
+    return `🎂 *My Custom Confection on Krish Dreamy Delight* 🎂
 
 - *Category*: ${activeCustomization.category.toUpperCase()}
 - *Flavour*: ${activeCustomization.baseFlavor}
@@ -213,7 +213,7 @@ export default function CakeBuilder({ onOrderAdded, builderOptions, websiteConfi
 - *Inscription*: "${activeCustomization.messageOnCake || 'None'}"
 - *Estimated Price*: ₹${activePrice}
 
-Designed using Lavanya's Dreamy Delight's interactive Cake Builder! Check it out: ${window.location.origin}`;
+Designed using Krish Dreamy Delight's interactive Cake Builder! Check it out: ${window.location.origin}`;
   };
 
   const handleShareCreation = async (orderData?: Order) => {
@@ -728,7 +728,7 @@ Designed using Lavanya's Dreamy Delight's interactive Cake Builder! Check it out
                       .replace(/{message}/g, submittedOrder.customization.messageOnCake || 'None')
                       .replace(/{deliveryDate}/g, submittedOrder.customization.deliveryDate);
                   } else {
-                    orderDetails = `Hi Lavanya Dreamy Delight!
+                    orderDetails = `Hi Krish Dreamy Delight!
 I want to place an order:
 
 - Category: ${submittedOrder.customization.category}

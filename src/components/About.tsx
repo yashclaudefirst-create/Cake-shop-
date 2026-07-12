@@ -20,7 +20,7 @@ export default function About({ config }: AboutProps) {
             {config?.aboutTitle || "Craving for Confectionery Perfection"}
           </h2>
           <p className="font-sans text-sm text-on-surface-variant max-w-lg mx-auto">
-            {config?.aboutSubtitle || "At Lavanya Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic."}
+            {config?.aboutSubtitle || "At Krish Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic."}
           </p>
         </div>
 
@@ -33,7 +33,7 @@ export default function About({ config }: AboutProps) {
               {config?.aboutMainTitle || "Choosy Baking, Small Batch Delicacies & Genuine Care"} <Sparkles className="inline-block text-primary w-5 h-5 ml-1.5 align-middle animate-pulse" />
             </h3>
             <p className="font-sans text-sm text-on-surface-variant leading-relaxed">
-              {config?.aboutDesc1 || "Founded under the simple tenet that cake should never taste ordinary or artificial, Lavanya Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry."}
+              {config?.aboutDesc1 || "Founded under the simple tenet that cake should never taste ordinary or artificial, Krish Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry."}
             </p>
             <p className="font-sans text-sm text-on-surface-variant leading-relaxed">
               {config?.aboutDesc2 || "We sourcing fresh seasonal sweet strawberries, organic eggs, natural Madagascar vanilla pods, and genuine imported cocoa powders. This uncompromising devotion to raw ingredients translates directly into dense, velvety moist finishes that melt on your tongue."}

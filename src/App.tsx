@@ -81,12 +81,12 @@ const DEFAULT_WEBSITE_CONFIG: WebsiteConfig = {
   heroBadge: "FSSAI Certified Baker",
   heroTitleCursive: "Hand Made",
   heroTitleGradient: "With Pure Love",
-  heroDescription: "Lavanya Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
+  heroDescription: "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter.",
   aboutTag: "Our Baker Story",
   aboutTitle: "Craving for Confectionery Perfection",
-  aboutSubtitle: "At Lavanya Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
+  aboutSubtitle: "At Krish Dreamy Delight, we elevate premium baking into a fine art form, blending pure organic Jersey dairy cream, authentic Belgian chocolates, and a sprinkle of magic.",
   aboutMainTitle: "Choosy Baking, Small Batch Delicacies & Genuine Care",
-  aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Lavanya Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
+  aboutDesc1: "Founded under the simple tenet that cake should never taste ordinary or artificial, Krish Dreamy Delight operates as a localized boutique micro-bakery. Every recipe sponge is individually whipped from scratch—there are zero premixes, zero high-fructose corn syrups, and strictly no artificial stabilizers inside our pantry.",
   aboutDesc2: "We sourcing fresh seasonal sweet strawberries, organic eggs, natural Madagascar vanilla pods, and genuine imported cocoa powders. This uncompromising devotion to raw ingredients translates directly into dense, velvety moist finishes that melt on your tongue.",
   card1Title: "FSSAI Certified",
   card1Desc: "Strict sanitary food workspace checks",
@@ -97,7 +97,7 @@ const DEFAULT_WEBSITE_CONFIG: WebsiteConfig = {
   card4Title: "Baked to Hour",
   card4Desc: "Dispatched warm within 3 hrs of setup",
   whatsappNumber: "919865621880",
-  whatsappMsgTemplate: `Hi Lavanya Dreamy Delight!
+  whatsappMsgTemplate: `Hi Krish Dreamy Delight!
 I want to place an order:
 
 - Category: {category}
@@ -191,13 +191,13 @@ const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
 
 const MOCK_ORDERS: Order[] = [
   {
-    id: "LAVANYA-70492",
+    id: "KRISH-70492",
     createdAt: new Date(Date.now() - 3 * 3600000).toLocaleString(),
     totalPrice: 1980,
     status: "Baking",
     customer: {
-      name: "Lavanya",
-      email: "lavanya@dreamydelight.com",
+      name: "Krish",
+      email: "krish@dreamydelight.com",
       phone: "+91-98912-34928",
       address: "M-Block, Greater Kailash 1, New Delhi",
       deliveryType: "delivery"
@@ -222,7 +222,7 @@ const MOCK_ORDERS: Order[] = [
     }
   },
   {
-    id: "LAVANYA-81204",
+    id: "KRISH-81204",
     createdAt: new Date(Date.now() - 24 * 3600000).toLocaleString(),
     totalPrice: 1450,
     status: "Received",
@@ -569,7 +569,7 @@ export default function App() {
                     Chef
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold leading-tight font-display uppercase tracking-wider">Chef Lavanya</h4>
+                    <h4 className="text-xs font-bold leading-tight font-display uppercase tracking-wider">Chef Krish</h4>
                     <span className="text-[9px] text-[#ffb6c1] flex items-center gap-1 font-semibold">
                       <span className="h-1.5 w-1.5 bg-emerald-400 rounded-full animate-ping"></span>
                       Studio Live Support (Inquiries)
@@ -601,13 +601,13 @@ export default function App() {
             {/* Customizer DM compositors */}
             <div className="p-4 bg-white space-y-3 text-left">
               <textarea
-                placeholder="Type details / questions to Chef Lavanya directly..."
+                placeholder="Type details / questions to Chef Krish directly..."
                 className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl text-xs font-semibold placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-primary h-16 resize-none"
                 value={chatMessage}
                 onChange={(e) => setChatMessage(e.target.value)}
               />
               <a
-                href={`https://wa.me/919865621880?text=${encodeURIComponent(chatMessage ? `Hi Chef Lavanya! ${chatMessage}` : 'Hi Lavanya Dreamy Delight baking kitchen!')}`}
+                href={`https://wa.me/919865621880?text=${encodeURIComponent(chatMessage ? `Hi Chef Krish! ${chatMessage}` : 'Hi Krish Dreamy Delight baking kitchen!')}`}
                 target="_blank"
                 rel="noreferrer"
                 onClick={() => setChatMessage('')}
@@ -622,7 +622,7 @@ export default function App() {
                 <a href="tel:+919865621880" className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Phone size={10} className="text-primary" /> Call +91 98656
                 </a>
-                <a href="mailto:orders@lavanyadreamydelight.com" className="flex items-center gap-1 hover:text-primary transition-colors">
+                <a href="mailto:orders@krishdreamydelight.com" className="flex items-center gap-1 hover:text-primary transition-colors">
                   <Mail size={10} className="text-primary" /> Mail Studio
                 </a>
               </div>

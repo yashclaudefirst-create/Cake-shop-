@@ -66,7 +66,7 @@ export default function Hero({ onNavClick, config }: HeroProps) {
           </h1>
 
           <p className="font-sans text-sm sm:text-base md:text-lg text-on-surface-variant max-w-md mx-auto md:mx-0 leading-relaxed">
-            {config?.heroDescription || "Lavanya Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter."}
+            {config?.heroDescription || "Krish Dreamy Delight is a gourmet boutique home baking kitchen. We craft dreamy, whimsical cakes and custom treats with only the finest premium chocolate, fresh organic seasonal fruits, and butter."}
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center md:justify-start gap-4 pt-4">

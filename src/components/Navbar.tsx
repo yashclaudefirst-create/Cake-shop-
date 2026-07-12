@@ -61,7 +61,7 @@ export default function Navbar({
           </div>
           <div>
             <span className="font-display text-lg md:text-xl font-bold tracking-tight text-primary uppercase select-none block">
-              Lavanya Dreamy Delight
+              Krish Dreamy Delight
             </span>
             <span className="text-[10px] font-sans text-on-surface-variant font-semibold tracking-widest block uppercase -mt-1">
               Gourmet Home Baking
