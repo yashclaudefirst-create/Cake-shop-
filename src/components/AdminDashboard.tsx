@@ -89,10 +89,23 @@ export default function AdminDashboard({
     onSaveConfig(editedConfig);
   };
 
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setNewImage(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddOrEditGalleryItem = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return setGalleryValidationError('Please enter a dessert item name.');
-    if (!newImage.trim()) return setGalleryValidationError('Please provide a valid product image link.');
+    if (!newImage.trim()) return setGalleryValidationError('Please upload or select an image for this item.');
     if (!newDescription.trim()) return setGalleryValidationError('Please explain the visual taste description.');
 
     if (editingGalleryId) {
@@ -784,23 +797,62 @@ Please confirm availability!`,
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-[#847375] uppercase block flex justify-between font-sans">
-                      <span>Image URL Link</span>
+                    <label className="text-[10px] font-bold text-zinc-650 uppercase block flex justify-between font-sans">
+                      <span>Cake Photo</span>
                       <button
                         type="button"
                         onClick={() => setNewImage('https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=600&auto=format&fit=crop')}
-                        className="text-[9px] text-[#874e58] font-black underline hover:text-[#primary] cursor-pointer"
+                        className="text-[9px] text-[#874e58] font-black underline hover:text-primary cursor-pointer"
                       >
                         Use Stock Cake Pic
                       </button>
                     </label>
-                    <input
-                      type="url"
-                      className="w-full p-2.5 bg-white border border-[#d6c2c3]/40 rounded-xl text-xs font-semibold font-mono"
-                      placeholder="https://images.unsplash.com/..."
-                      value={newImage}
-                      onChange={(e) => setNewImage(e.target.value)}
-                    />
+                    
+                    <div className="flex flex-col gap-1.5">
+                      {newImage ? (
+                        <div className="relative border border-[#d6c2c3]/40 rounded-xl overflow-hidden bg-white h-[42px] flex items-center justify-between px-3 group/preview animate-fade-in">
+                          <div className="flex items-center gap-2">
+                            <img 
+                              src={newImage} 
+                              alt="Uploaded preview" 
+                              className="w-8 h-8 rounded-md object-cover border border-[#d6c2c3]/20 animate-fade-in"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="text-[10px] font-bold text-[#847375] truncate max-w-[120px]">Photo loaded successfully</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <label className="p-1 text-primary hover:bg-[#fff8f5] rounded-lg cursor-pointer transition-colors" title="Change photo">
+                              <Plus size={13} />
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageFileChange} 
+                                className="hidden" 
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setNewImage('')}
+                              className="p-1 text-red-650 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              title="Remove image"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <label className="border-2 border-dashed border-[#d6c2c3]/60 hover:border-primary/60 bg-white rounded-xl py-2 px-3 text-center cursor-pointer hover:bg-[#fff8f5]/10 transition-all flex items-center justify-center gap-1.5 select-none h-[42px] group">
+                          <Plus size={13} className="text-zinc-400 group-hover:text-primary transition-colors" />
+                          <span className="text-[10px] font-bold text-zinc-550 block font-sans">Upload Cake Photo</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleImageFileChange} 
+                            className="hidden" 
+                          />
+                        </label>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -872,7 +924,22 @@ Please confirm availability!`,
                         </div>
                       </div>
                       
-                      <div className="p-2 border-t border-primary/5 bg-[#fff8f5]/40 flex justify-end">
+                      <div className="p-2 border-t border-primary/5 bg-[#fff8f5]/40 flex justify-between items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleStartEditGalleryItem(item);
+                            // Scroll to the top of form smoothly
+                            const element = document.getElementById('admin-dashboard');
+                            if (element) {
+                              element.scrollIntoView({ behavior: 'smooth' });
+                            }
+                          }}
+                          className="px-2.5 py-1 text-[9px] font-black text-primary hover:bg-primary/5 rounded-md border border-primary/20 transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit size={11} />
+                          Edit Details
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteGalleryItem(item.id)}
