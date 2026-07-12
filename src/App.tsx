@@ -7,10 +7,11 @@ import BakingAnimation from './components/BakingAnimation';
 import CakeBuilder from './components/CakeBuilder';
 import Gallery from './components/Gallery';
 import About from './components/About';
+import Reviews from './components/Reviews';
 import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import Footer from './components/Footer';
-import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions } from './types';
+import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, Review } from './types';
 import appaBirthdayCake from './assets/images/appa_birthday_cake_1783832148907.jpg';
 import cookiesBakingTray from './assets/images/cookies_baking_tray_1783835040357.jpg';
 import flowerCookiesPackaged from './assets/images/flower_cookies_packaged_1783835024228.jpg';
@@ -188,6 +189,41 @@ const DEFAULT_GALLERY_ITEMS: GalleryItem[] = [
   }
 ];
 
+const DEFAULT_REVIEWS: Review[] = [
+  {
+    id: "rev-siva",
+    author: "@siva_23",
+    rating: 5,
+    comment: "Delicious tasty chocolates sister, super…💯✨😍",
+    date: "2024-02-14",
+    cakeName: "Chocolates"
+  },
+  {
+    id: "rev-satheesh",
+    author: "@satheeshsk96",
+    rating: 5,
+    comment: "Very 😋 taste and super making",
+    date: "2024-03-26",
+    cakeName: "Birthday Cake"
+  },
+  {
+    id: "rev-deepika",
+    author: "@dr_.deepika",
+    rating: 5,
+    comment: "The cake was so delicious 🤔 home made cake♥",
+    date: "2024-06-17",
+    cakeName: "Butterfly-Themed Cake"
+  },
+  {
+    id: "rev-kathiresh",
+    author: "@kathireshkarthik",
+    rating: 5,
+    comment: "Delicious Cake and beautiful decoration work. Thanks",
+    date: "2024-03-28",
+    cakeName: "Unicorn/Butterfly Cake"
+  }
+];
+
 
 const MOCK_ORDERS: Order[] = [
   {
@@ -312,6 +348,16 @@ export default function App() {
     return DEFAULT_BUILDER_OPTIONS;
   });
 
+  const [reviews, setReviews] = useState<Review[]>(() => {
+    const saved = localStorage.getItem('krish_reviews_list_v4');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return DEFAULT_REVIEWS;
+  });
+
   // Track web contents persistence
   useEffect(() => {
     localStorage.setItem('lavanya_website_config', JSON.stringify(websiteConfig));
@@ -324,6 +370,10 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('lavanya_builder_options', JSON.stringify(builderOptions));
   }, [builderOptions]);
+
+  useEffect(() => {
+    localStorage.setItem('krish_reviews_list_v4', JSON.stringify(reviews));
+  }, [reviews]);
 
   // Administrator login authentication states
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
@@ -448,6 +498,11 @@ export default function App() {
               setBuilderOptions(newOptions);
               showToast('Cake custom design builder options updated successfully!', 'success');
             }}
+            reviews={reviews}
+            onUpdateReviews={(newReviews) => {
+              setReviews(newReviews);
+              showToast('Customer reviews updated successfully!', 'success');
+            }}
           />
         </div>
       )}
@@ -475,6 +530,15 @@ export default function App() {
       <div id="gallery">
         <Gallery items={galleryItems} />
       </div>
+
+      {/* 6.5 Customer Reviews and Testimonials */}
+      <Reviews 
+        reviews={reviews} 
+        onSubmitReview={(newReview) => {
+          setReviews([newReview, ...reviews]);
+          showToast('Thank you so much! Your sweet review has been published.', 'success');
+        }} 
+      />
 
       {/* 7. Kitchen narrative story (About Us) */}
       <div id="about">

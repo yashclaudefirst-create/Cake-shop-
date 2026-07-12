@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, CakeBuilderOptionItem } from '../types';
+import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, CakeBuilderOptionItem, Review } from '../types';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -18,7 +18,9 @@ import {
   Edit,
   Plus,
   Save,
-  Undo
+  Undo,
+  MessageSquare,
+  Star
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -35,6 +37,8 @@ interface AdminDashboardProps {
   onUpdateGalleryItems: (newItems: GalleryItem[]) => void;
   builderOptions: CakeBuilderOptions;
   onUpdateBuilderOptions: (newOptions: CakeBuilderOptions) => void;
+  reviews?: Review[];
+  onUpdateReviews?: (newReviews: Review[]) => void;
 }
 
 export default function AdminDashboard({ 
@@ -50,7 +54,9 @@ export default function AdminDashboard({
   galleryItems,
   onUpdateGalleryItems,
   builderOptions,
-  onUpdateBuilderOptions
+  onUpdateBuilderOptions,
+  reviews = [],
+  onUpdateReviews
 }: AdminDashboardProps) {
 
   const [filterStatus, setFilterStatus] = useState<string>('All Active');
@@ -59,7 +65,7 @@ export default function AdminDashboard({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   // Switch tabs to include custom options manager
-  const [activeTab, setActiveTab] = useState<'orders' | 'editWebsite' | 'builderOptions'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'editWebsite' | 'builderOptions' | 'reviews'>('orders');
   const [editedConfig, setEditedConfig] = useState<WebsiteConfig>(() => ({ ...websiteConfig }));
   
   // Gallery additions/editions inputs
@@ -69,6 +75,16 @@ export default function AdminDashboard({
   const [newDescription, setNewDescription] = useState('');
   const [editingGalleryId, setEditingGalleryId] = useState<string | null>(null);
   const [galleryValidationError, setGalleryValidationError] = useState('');
+
+  // Reviews editing states
+  const [reviewAuthor, setReviewAuthor] = useState('');
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewDate, setReviewDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [reviewCakeName, setReviewCakeName] = useState('');
+  const [reviewAvatar, setReviewAvatar] = useState('');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [reviewValidationError, setReviewValidationError] = useState('');
 
   // Cake custom design builder options editor states
   const [activeCategory, setActiveCategory] = useState<keyof CakeBuilderOptions>('sizes');
@@ -159,6 +175,89 @@ export default function AdminDashboard({
       setNewImage('');
       setNewDescription('');
     }
+  };
+
+  // Reviews CRUD actions
+  const handleAddOrEditReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewAuthor.trim()) return setReviewValidationError('Please enter a reviewer name.');
+    if (!reviewComment.trim()) return setReviewValidationError('Please enter review comment text.');
+    if (reviewRating < 1 || reviewRating > 5) return setReviewValidationError('Rating must be between 1 and 5 stars.');
+
+    if (editingReviewId) {
+      // Edit mode
+      const updatedList = reviews.map(rev => {
+        if (rev.id === editingReviewId) {
+          return {
+            ...rev,
+            author: reviewAuthor.trim(),
+            rating: reviewRating,
+            comment: reviewComment.trim(),
+            date: reviewDate,
+            cakeName: reviewCakeName.trim() || undefined,
+            avatar: reviewAvatar.trim() || undefined
+          };
+        }
+        return rev;
+      });
+      onUpdateReviews?.(updatedList);
+      setEditingReviewId(null);
+    } else {
+      // Create mode
+      const newReview: Review = {
+        id: `rev-custom-${Date.now()}`,
+        author: reviewAuthor.trim(),
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        date: reviewDate,
+        cakeName: reviewCakeName.trim() || undefined,
+        avatar: reviewAvatar.trim() || undefined
+      };
+      onUpdateReviews?.([newReview, ...reviews]);
+    }
+
+    setReviewAuthor('');
+    setReviewRating(5);
+    setReviewComment('');
+    setReviewDate(new Date().toISOString().split('T')[0]);
+    setReviewCakeName('');
+    setReviewAvatar('');
+    setReviewValidationError('');
+  };
+
+  const handleStartEditReview = (rev: Review) => {
+    setEditingReviewId(rev.id);
+    setReviewAuthor(rev.author);
+    setReviewRating(rev.rating);
+    setReviewComment(rev.comment);
+    setReviewDate(rev.date);
+    setReviewCakeName(rev.cakeName || '');
+    setReviewAvatar(rev.avatar || '');
+  };
+
+  const handleDeleteReview = (id: string) => {
+    const nextList = reviews.filter(rev => rev.id !== id);
+    onUpdateReviews?.(nextList);
+    if (editingReviewId === id) {
+      setEditingReviewId(null);
+      setReviewAuthor('');
+      setReviewRating(5);
+      setReviewComment('');
+      setReviewDate(new Date().toISOString().split('T')[0]);
+      setReviewCakeName('');
+      setReviewAvatar('');
+    }
+  };
+
+  const handleCancelEditReview = () => {
+    setEditingReviewId(null);
+    setReviewAuthor('');
+    setReviewRating(5);
+    setReviewComment('');
+    setReviewDate(new Date().toISOString().split('T')[0]);
+    setReviewCakeName('');
+    setReviewAvatar('');
+    setReviewValidationError('');
   };
 
   // Option CRUD actions
@@ -459,6 +558,19 @@ Please confirm availability!`,
             <CakeIcon size={16} />
             Cake Customizer Options Manager
             {activeTab === 'builderOptions' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('reviews')}
+            className={`pb-3 font-display font-black text-sm relative transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'reviews' 
+              ? 'text-primary' 
+              : 'text-[#847375] hover:text-[#874e58]'
+            }`}
+          >
+            <MessageSquare size={16} />
+            Reviews Manager ({reviews.length})
+            {activeTab === 'reviews' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />}
           </button>
         </div>
 
@@ -1368,6 +1480,211 @@ Please confirm availability!`,
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reviews' && (
+          <div className="space-y-10 animate-fade-in pb-16 text-left">
+            <div className="bg-white rounded-3xl border border-primary-container/30 p-6 md:p-8 space-y-6 shadow-xs">
+              <div className="border-b border-[#d6c2c3]/30 pb-4">
+                <h3 className="font-display text-lg font-bold text-primary flex items-center gap-2">
+                  <MessageSquare size={18} /> Customer Reviews Manager
+                </h3>
+                <p className="font-sans text-[11px] text-[#847375]">
+                  Publish, edit, and moderate reviews displayed on the main page of Krish Dreamy Delight.
+                </p>
+              </div>
+
+              {/* Grid block for Form (Left 4) vs Active reviews (Right 8) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* REVIEWS CREATOR/EDITOR FORM */}
+                <form onSubmit={handleAddOrEditReview} className="lg:col-span-4 bg-[#fff8f5] p-5 rounded-2xl border border-primary/10 space-y-4">
+                  <h4 className="font-display text-xs font-black uppercase tracking-wider text-primary">
+                    {editingReviewId ? "✍️ Edit Customer Review" : "➕ Add New Customer Review"}
+                  </h4>
+
+                  {reviewValidationError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded-xl font-medium leading-relaxed">
+                      {reviewValidationError}
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Customer Name</label>
+                    <input 
+                      type="text"
+                      value={reviewAuthor}
+                      onChange={(e) => setReviewAuthor(e.target.value)}
+                      placeholder="e.g. Aarav Patel"
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Rating (Stars)</label>
+                    <select
+                      value={reviewRating}
+                      onChange={(e) => setReviewRating(Number(e.target.value))}
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-medium"
+                    >
+                      <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+                      <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+                      <option value="3">⭐⭐⭐ (3 stars)</option>
+                      <option value="2">⭐⭐ (2 stars)</option>
+                      <option value="1">⭐ (1 star)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Purchase Item Tag</label>
+                    <input 
+                      type="text"
+                      value={reviewCakeName}
+                      onChange={(e) => setReviewCakeName(e.target.value)}
+                      placeholder="e.g. Belgian Walnut Brownie"
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Date</label>
+                    <input 
+                      type="date"
+                      value={reviewDate}
+                      onChange={(e) => setReviewDate(e.target.value)}
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-mono font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Profile Avatar Image URL (Optional)</label>
+                    <input 
+                      type="url"
+                      value={reviewAvatar}
+                      onChange={(e) => setReviewAvatar(e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-600 uppercase block">Comment / Review Text</label>
+                    <textarea 
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      rows={4}
+                      placeholder="Share customer's delicious experience feedback..."
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs focus:outline-primary font-medium leading-relaxed resize-none"
+                    />
+                  </div>
+
+                  <div className="pt-2 flex gap-2">
+                    <button
+                      type="submit"
+                      className="flex-1 py-2 bg-primary hover:bg-[#6b3741] text-white rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+                    >
+                      <Save size={13} /> {editingReviewId ? "Update" : "Publish"}
+                    </button>
+                    {editingReviewId && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEditReview}
+                        className="p-2 bg-white border border-[#d6c2c3] text-[#847375] hover:text-red-700 rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center"
+                        title="Cancel editing"
+                      >
+                        <Undo size={14} />
+                      </button>
+                    )}
+                  </div>
+                </form>
+
+                {/* ACTIVE REVIEWS LIST DISPLAY */}
+                <div className="lg:col-span-8 space-y-3">
+                  <h4 className="font-display text-xs font-black uppercase tracking-wider text-primary">
+                    Published Customer Reviews ({reviews.length})
+                  </h4>
+
+                  <div className="bg-white border border-[#d6c2c3]/30 rounded-2xl overflow-hidden shadow-xs divide-y divide-[#d6c2c3]/20">
+                    {reviews.length === 0 ? (
+                      <div className="p-8 text-center text-zinc-400 font-sans text-xs">
+                        No reviews published yet. Use the left form to write and publish your first customer review!
+                      </div>
+                    ) : (
+                      reviews.map((rev) => (
+                        <div key={rev.id} className="p-4 flex items-start justify-between gap-4 hover:bg-[#fff8f5]/25 transition-colors">
+                          <div className="flex items-start gap-3 text-left">
+                            {rev.avatar ? (
+                              <img 
+                                src={rev.avatar} 
+                                alt={rev.author} 
+                                className="w-10 h-10 rounded-full object-cover border border-primary/10 shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0 font-display">
+                                {rev.author.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-display font-black text-xs text-primary block">
+                                  {rev.author}
+                                </span>
+                                <span className="text-[9px] text-zinc-400 font-semibold font-mono">
+                                  {rev.date}
+                                </span>
+                                {rev.cakeName && (
+                                  <span className="bg-[#fff1ed] text-primary text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                    {rev.cakeName}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-0.5 my-1">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star 
+                                    key={i} 
+                                    size={10} 
+                                    className={`${
+                                      i < rev.rating 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-zinc-200'
+                                    }`} 
+                                  />
+                                ))}
+                              </div>
+                              <p className="text-[11px] text-zinc-600 font-sans font-normal leading-relaxed mt-1">
+                                "{rev.comment}"
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditReview(rev)}
+                              className="p-1.5 text-[#847375] hover:text-primary hover:bg-primary-container/10 rounded-lg transition-colors cursor-pointer"
+                              title="Edit this review"
+                            >
+                              <Edit size={13} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteReview(rev.id)}
+                              className="p-1.5 text-[#847375] hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              title="Delete this review"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

@@ -80,6 +80,16 @@ export interface GalleryItem {
   description: string;
 }
 
+export interface Review {
+  id: string;
+  author: string;
+  rating: number; // 1 to 5
+  comment: string;
+  date: string;
+  avatar?: string;
+  cakeName?: string;
+}
+
 export interface WebsiteConfig {
   heroBadge: string;
   heroTitleCursive: string;
