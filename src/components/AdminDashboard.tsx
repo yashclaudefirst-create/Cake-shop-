@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, CakeBuilderOptionItem, Review } from '../types';
+import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, CakeBuilderOptionItem, Review, CakeSlot } from '../types';
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -20,8 +20,15 @@ import {
   Save,
   Undo,
   MessageSquare,
-  Star
+  Star,
+  Database,
+  Calendar,
+  Clock,
+  Copy,
+  Check,
+  Code
 } from 'lucide-react';
+import { SQL_SCHEMA_DDL, generateAllSlotsSQL, generateSlotInsertSQL } from '../db/sqlHelpers';
 
 interface AdminDashboardProps {
   orders: Order[];
@@ -39,6 +46,8 @@ interface AdminDashboardProps {
   onUpdateBuilderOptions: (newOptions: CakeBuilderOptions) => void;
   reviews?: Review[];
   onUpdateReviews?: (newReviews: Review[]) => void;
+  cakeSlots?: CakeSlot[];
+  onUpdateCakeSlots?: (newSlots: CakeSlot[]) => void;
 }
 
 export default function AdminDashboard({ 
@@ -56,7 +65,9 @@ export default function AdminDashboard({
   builderOptions,
   onUpdateBuilderOptions,
   reviews = [],
-  onUpdateReviews
+  onUpdateReviews,
+  cakeSlots = [],
+  onUpdateCakeSlots
 }: AdminDashboardProps) {
 
   const [filterStatus, setFilterStatus] = useState<string>('All Active');
@@ -64,9 +75,23 @@ export default function AdminDashboard({
   const [selectedOrderDetail, setSelectedOrderDetail] = useState<Order | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Switch tabs to include custom options manager
-  const [activeTab, setActiveTab] = useState<'orders' | 'editWebsite' | 'builderOptions' | 'reviews'>('orders');
+  // Switch tabs to include cake slots manager
+  const [activeTab, setActiveTab] = useState<'cakeSlots' | 'orders' | 'editWebsite' | 'builderOptions' | 'reviews'>('cakeSlots');
   const [editedConfig, setEditedConfig] = useState<WebsiteConfig>(() => ({ ...websiteConfig }));
+
+  // Cake Slots management state
+  const [slotDate, setSlotDate] = useState(() => {
+    const tomorrow = new Date(Date.now() + 86400000);
+    return tomorrow.toISOString().split('T')[0];
+  });
+  const [slotTimeWindow, setSlotTimeWindow] = useState('10:00 AM - 01:00 PM');
+  const [slotTitle, setSlotTitle] = useState('Morning Fresh Bake Slot');
+  const [slotCapacity, setSlotCapacity] = useState<number>(4);
+  const [slotNotes, setSlotNotes] = useState('Small-batch gourmet sponge, baked fresh to order');
+  const [slotValidationError, setSlotValidationError] = useState('');
+  const [sqlCopied, setSqlCopied] = useState(false);
+  const [schemaCopied, setSchemaCopied] = useState(false);
+  const [copiedSlotId, setCopiedSlotId] = useState<string | null>(null);
   
   // Gallery additions/editions inputs
   const [newTitle, setNewTitle] = useState('');
@@ -99,6 +124,76 @@ export default function AdminDashboard({
   React.useEffect(() => {
     setEditedConfig({ ...websiteConfig });
   }, [websiteConfig]);
+
+  const handleAddSlot = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slotDate) return setSlotValidationError('Please pick a date for the cake slot.');
+    if (!slotTimeWindow.trim()) return setSlotValidationError('Please enter a time window.');
+    if (!slotTitle.trim()) return setSlotValidationError('Please enter a title for this slot.');
+    if (slotCapacity <= 0) return setSlotValidationError('Capacity must be at least 1 cake.');
+
+    const newSlot: CakeSlot = {
+      id: `slot-${slotDate}-${Date.now().toString().slice(-4)}`,
+      date: slotDate,
+      timeWindow: slotTimeWindow.trim(),
+      title: slotTitle.trim(),
+      maxCapacity: Number(slotCapacity),
+      bookedCount: 0,
+      isActive: true,
+      notes: slotNotes.trim() || undefined,
+      createdAt: new Date().toISOString()
+    };
+
+    if (onUpdateCakeSlots) {
+      onUpdateCakeSlots([newSlot, ...cakeSlots]);
+    }
+    setSlotTitle('Morning Fresh Bake Slot');
+    setSlotValidationError('');
+  };
+
+  const handleToggleSlotActive = (id: string) => {
+    if (!onUpdateCakeSlots) return;
+    const updated = cakeSlots.map(s => s.id === id ? { ...s, isActive: !s.isActive } : s);
+    onUpdateCakeSlots(updated);
+  };
+
+  const handleDeleteSlot = (id: string) => {
+    if (!onUpdateCakeSlots) return;
+    const updated = cakeSlots.filter(s => s.id !== id);
+    onUpdateCakeSlots(updated);
+  };
+
+  const handleAdjustSlotBooked = (id: string, delta: number) => {
+    if (!onUpdateCakeSlots) return;
+    const updated = cakeSlots.map(s => {
+      if (s.id === id) {
+        const newBooked = Math.max(0, Math.min(s.maxCapacity, s.bookedCount + delta));
+        return { ...s, bookedCount: newBooked };
+      }
+      return s;
+    });
+    onUpdateCakeSlots(updated);
+  };
+
+  const handleCopySchemaSQL = () => {
+    navigator.clipboard.writeText(SQL_SCHEMA_DDL);
+    setSchemaCopied(true);
+    setTimeout(() => setSchemaCopied(false), 2500);
+  };
+
+  const handleCopyAllSlotsSQL = () => {
+    const sql = generateAllSlotsSQL(cakeSlots);
+    navigator.clipboard.writeText(sql);
+    setSqlCopied(true);
+    setTimeout(() => setSqlCopied(false), 2500);
+  };
+
+  const handleCopySingleSlotSQL = (slot: CakeSlot) => {
+    const sql = generateSlotInsertSQL(slot);
+    navigator.clipboard.writeText(sql);
+    setCopiedSlotId(slot.id);
+    setTimeout(() => setCopiedSlotId(null), 2500);
+  };
 
   const handleSaveWebsiteCopy = (e: React.FormEvent) => {
     e.preventDefault();
@@ -520,7 +615,20 @@ Please confirm availability!`,
         </div>
 
         {/* Navigation Tabs for Owner Content Admin */}
-        <div className="flex border-b border-[#d6c2c3]/40 gap-6 mb-8 mt-4">
+        <div className="flex flex-wrap border-b border-[#d6c2c3]/40 gap-4 sm:gap-6 mb-8 mt-4">
+          <button
+            onClick={() => setActiveTab('cakeSlots')}
+            className={`pb-3 font-display font-black text-sm relative transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'cakeSlots' 
+              ? 'text-primary' 
+              : 'text-[#847375] hover:text-[#874e58]'
+            }`}
+          >
+            <Calendar size={16} />
+            Cake Slots & SQL Manager ({cakeSlots.length})
+            {activeTab === 'cakeSlots' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />}
+          </button>
+
           <button
             onClick={() => setActiveTab('orders')}
             className={`pb-3 font-display font-black text-sm relative transition-all flex items-center gap-2 cursor-pointer ${
@@ -573,6 +681,329 @@ Please confirm availability!`,
             {activeTab === 'reviews' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full animate-pulse" />}
           </button>
         </div>
+
+        {/* CAKE SLOTS & SQL MANAGER TAB */}
+        {activeTab === 'cakeSlots' && (
+          <div className="space-y-8 animate-fade-in pb-16 text-left">
+            <div className="bg-white rounded-3xl border border-primary-container/30 p-6 md:p-8 space-y-6 shadow-xs">
+              
+              {/* Header with SQL Quick Copy */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-[#d6c2c3]/30 pb-4 gap-4">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-primary flex items-center gap-2">
+                    <Calendar size={18} /> Cake Slots & SQL Database Manager
+                  </h3>
+                  <p className="font-sans text-[11px] text-[#847375]">
+                    Manage real-time baking slots for limited daily batch production, and copy SQL schemas ready for your database.
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleCopySchemaSQL}
+                    className="px-3 py-1.5 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 text-[10px] font-bold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    {schemaCopied ? <Check size={12} className="text-emerald-600" /> : <Database size={12} />}
+                    {schemaCopied ? 'Schema Copied!' : 'Copy SQL Schema'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCopyAllSlotsSQL}
+                    className="px-3.5 py-1.5 bg-primary hover:bg-[#6b3741] text-white text-[10px] font-black rounded-xl shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  >
+                    {sqlCopied ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
+                    {sqlCopied ? 'All SQL Copied!' : 'Export Slots as SQL'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Grid: Left 5 cols (Add form) vs Right 7 cols (Slot cards & SQL) */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                {/* 1. NEW CAKE SLOT CREATOR FORM */}
+                <form onSubmit={handleAddSlot} className="lg:col-span-5 bg-[#fff8f5] p-5 rounded-2xl border border-primary/10 space-y-4">
+                  <h4 className="font-display text-xs font-black uppercase tracking-wider text-primary flex items-center gap-1.5">
+                    <Plus size={14} /> Schedule New Cake Slot
+                  </h4>
+
+                  {slotValidationError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-[11px] rounded-xl font-medium leading-relaxed">
+                      ⚠️ {slotValidationError}
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-650 uppercase block">Slot Date</label>
+                    <input 
+                      type="date"
+                      required
+                      value={slotDate}
+                      onChange={(e) => setSlotDate(e.target.value)}
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs font-mono font-medium focus:outline-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-zinc-650 uppercase block">Time Window</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        '10:00 AM - 01:00 PM',
+                        '01:00 PM - 04:00 PM',
+                        '04:00 PM - 07:00 PM',
+                        '07:00 PM - 10:00 PM'
+                      ].map((preset) => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => setSlotTimeWindow(preset)}
+                          className={`text-[9.5px] font-mono py-1.5 px-2 rounded-lg border text-center transition-all cursor-pointer ${
+                            slotTimeWindow === preset
+                              ? 'bg-primary text-white border-primary font-bold'
+                              : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50'
+                          }`}
+                        >
+                          {preset}
+                        </button>
+                      ))}
+                    </div>
+                    <input 
+                      type="text"
+                      required
+                      value={slotTimeWindow}
+                      onChange={(e) => setSlotTimeWindow(e.target.value)}
+                      placeholder="e.g. 10:00 AM - 01:00 PM"
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs font-medium focus:outline-primary mt-1"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-650 uppercase block">Slot Name / Tag</label>
+                    <input 
+                      type="text"
+                      required
+                      value={slotTitle}
+                      onChange={(e) => setSlotTitle(e.target.value)}
+                      placeholder="e.g. Morning Fresh Bake, Weekend Rush"
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs font-medium focus:outline-primary"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-650 uppercase block">Max Cakes Limit</label>
+                      <input 
+                        type="number"
+                        min="1"
+                        max="20"
+                        required
+                        value={slotCapacity}
+                        onChange={(e) => setSlotCapacity(Number(e.target.value))}
+                        className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs font-medium focus:outline-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-zinc-650 uppercase block">Status</label>
+                      <div className="bg-white border border-emerald-200 text-emerald-800 rounded-xl px-3 py-2 text-xs font-bold text-center">
+                        Active & Open
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-zinc-650 uppercase block">Kitchen Notes (Optional)</label>
+                    <textarea 
+                      rows={2}
+                      value={slotNotes}
+                      onChange={(e) => setSlotNotes(e.target.value)}
+                      placeholder="e.g. Scratch-baked with organic cow butter and fresh milk"
+                      className="w-full bg-white border border-[#d6c2c3]/50 rounded-xl px-3 py-2 text-xs font-medium focus:outline-primary resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-primary hover:bg-[#6b3741] text-white rounded-xl font-bold text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                  >
+                    <Plus size={14} /> Add Cake Slot & Generate SQL
+                  </button>
+                </form>
+
+                {/* 2. ACTIVE SLOTS LIST & SQL PREPARATION */}
+                <div className="lg:col-span-7 space-y-6">
+                  <div>
+                    <h4 className="font-display text-xs font-black uppercase tracking-wider text-primary mb-3 flex items-center justify-between">
+                      <span>Scheduled Cake Slots ({cakeSlots.length})</span>
+                      <span className="text-[10px] font-normal text-zinc-500 font-sans">
+                        {cakeSlots.filter(s => s.isActive).length} Open for Booking
+                      </span>
+                    </h4>
+
+                    <div className="space-y-3">
+                      {cakeSlots.length === 0 ? (
+                        <div className="p-8 text-center text-zinc-400 font-sans text-xs bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                          No cake slots created yet. Use the left form to schedule your first baking slot!
+                        </div>
+                      ) : (
+                        cakeSlots.map((slot) => {
+                          const remaining = Math.max(0, slot.maxCapacity - slot.bookedCount);
+                          const isFull = remaining === 0;
+
+                          return (
+                            <div 
+                              key={slot.id} 
+                              className={`p-4 rounded-2xl border transition-all ${
+                                !slot.isActive
+                                  ? 'bg-zinc-50 border-zinc-200 opacity-60'
+                                  : isFull
+                                  ? 'bg-rose-50/50 border-rose-200'
+                                  : 'bg-white border-[#d6c2c3]/40 hover:shadow-xs'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-display font-black text-xs text-primary">
+                                      {slot.title}
+                                    </span>
+                                    <span className="font-mono text-[10px] font-bold bg-[#fff1ea] text-[#874e58] px-2 py-0.5 rounded-md">
+                                      📅 {slot.date}
+                                    </span>
+                                    <span className="font-mono text-[10px] text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">
+                                      ⏰ {slot.timeWindow}
+                                    </span>
+                                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                                      !slot.isActive
+                                        ? 'bg-zinc-200 text-zinc-700'
+                                        : isFull
+                                        ? 'bg-rose-100 text-rose-800'
+                                        : 'bg-emerald-100 text-emerald-800'
+                                    }`}>
+                                      {!slot.isActive ? 'Paused' : isFull ? 'Slot Full' : `${remaining} slots left`}
+                                    </span>
+                                  </div>
+
+                                  {slot.notes && (
+                                    <p className="text-[11px] text-zinc-600 mt-1 font-sans">
+                                      {slot.notes}
+                                    </p>
+                                  )}
+
+                                  {/* Capacity Bar */}
+                                  <div className="mt-2.5 flex items-center gap-3">
+                                    <div className="w-40 bg-zinc-100 rounded-full h-2 overflow-hidden">
+                                      <div 
+                                        className={`h-full rounded-full transition-all ${
+                                          isFull ? 'bg-rose-500' : 'bg-primary'
+                                        }`}
+                                        style={{ width: `${Math.min(100, (slot.bookedCount / slot.maxCapacity) * 100)}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-[10px] font-mono font-bold text-zinc-500">
+                                      {slot.bookedCount} / {slot.maxCapacity} Booked
+                                    </span>
+
+                                    {/* Quick + / - slot capacity adjustments */}
+                                    <div className="flex items-center gap-1 ml-auto">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAdjustSlotBooked(slot.id, -1)}
+                                        disabled={slot.bookedCount <= 0}
+                                        className="w-5 h-5 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                                        title="Decrease booked count"
+                                      >
+                                        -
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleAdjustSlotBooked(slot.id, 1)}
+                                        disabled={slot.bookedCount >= slot.maxCapacity}
+                                        className="w-5 h-5 rounded bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold flex items-center justify-center disabled:opacity-30 cursor-pointer"
+                                        title="Increase booked count"
+                                      >
+                                        +
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Slot Controls */}
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopySingleSlotSQL(slot)}
+                                    className="p-1.5 text-zinc-500 hover:text-primary hover:bg-primary-container/10 rounded-lg transition-colors cursor-pointer"
+                                    title="Copy SQL INSERT statement for this slot"
+                                  >
+                                    {copiedSlotId === slot.id ? <Check size={13} className="text-emerald-600" /> : <Code size={13} />}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleSlotActive(slot.id)}
+                                    className={`px-2 py-1 text-[9px] font-bold rounded-lg transition-colors cursor-pointer ${
+                                      slot.isActive
+                                        ? 'bg-amber-50 text-amber-800 hover:bg-amber-100'
+                                        : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                                    }`}
+                                  >
+                                    {slot.isActive ? 'Pause' : 'Activate'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSlot(slot.id)}
+                                    className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                    title="Delete slot"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SQL PREVIEW & PREPARATION PANEL */}
+                  <div className="bg-[#1e1e24] text-zinc-200 rounded-2xl p-5 border border-zinc-800 space-y-3 font-mono">
+                    <div className="flex items-center justify-between border-b border-zinc-700/60 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <Database size={14} className="text-emerald-400" />
+                        <span className="text-xs font-bold text-white font-sans">SQL Table Schema & Insert Queries</span>
+                      </div>
+                      <span className="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded">
+                        PostgreSQL / Cloud SQL / MySQL / SQLite
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
+                      You can run this SQL directly in your database terminal or SQL console. All new cake slots created above are formatted into ready-to-run SQL queries:
+                    </p>
+
+                    <div className="bg-[#141418] p-3 rounded-xl max-h-48 overflow-y-auto text-[11px] leading-relaxed text-emerald-300 whitespace-pre font-mono border border-zinc-800">
+{generateAllSlotsSQL(cakeSlots)}
+                    </div>
+
+                    <div className="pt-1 flex items-center justify-between text-[11px] text-zinc-400 font-sans">
+                      <span>✓ Ready for SQL execution</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyAllSlotsSQL}
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-bold text-[10px] flex items-center gap-1 transition-colors cursor-pointer font-sans"
+                      >
+                        {sqlCopied ? <Check size={11} /> : <Copy size={11} />}
+                        {sqlCopied ? 'Copied to Clipboard' : 'Copy SQL Queries'}
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
 
         {activeTab === 'editWebsite' && (
           <div className="space-y-10 animate-fade-in pb-16">

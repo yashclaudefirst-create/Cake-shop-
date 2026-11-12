@@ -75,15 +75,15 @@ export default function Hero({ onNavClick, config }: HeroProps) {
               className="px-8 py-4 bg-primary text-white rounded-full font-bold text-sm tracking-wide shadow-md hover:bg-[#6b3741] hover:-translate-y-1 hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer group"
               id="hero-btn-builder"
             >
-              Build Your Cake
+              Book Fresh Cake Slot
               <ArrowRight size={16} className="transform group-hover:translate-x-1.5 transition-transform" />
             </button>
             <button
-              onClick={() => onNavClick('gallery')}
+              onClick={() => onNavClick('menu')}
               className="px-8 py-4 bg-white/95 text-primary border border-primary/20 rounded-full font-bold text-sm shadow-sm hover:bg-primary/5 hover:scale-105 transition-all duration-300 cursor-pointer"
-              id="hero-btn-gallery"
+              id="hero-btn-menu"
             >
-              View Our Creations
+              Explore Boutique Menu
             </button>
           </div>
 

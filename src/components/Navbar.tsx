@@ -31,8 +31,10 @@ export default function Navbar({
 
   const navItems = [
     { id: 'home', label: 'Home' },
-    { id: 'builder', label: 'Build Cake' },
-    { id: 'gallery', label: 'Gallery' },
+    { id: 'menu', label: 'Menu' },
+    { id: 'builder', label: 'Book Cake Slot' },
+    { id: 'gallery', label: 'Creations' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'about', label: 'About' },
   ];
 
@@ -53,7 +55,7 @@ export default function Navbar({
         {/* Brand Logo */}
         <button 
           onClick={() => handleItemClick('home')}
-          className="flex items-center gap-2 group text-left cursor-pointer transition-transform duration-200 hover:scale-105"
+          className="flex items-center gap-2 group text-left cursor-pointer transition-transform duration-200 hover:scale-102"
           id="nav-logo"
         >
           <div className="w-10 h-10 rounded-full bg-[#ffb6c1]/40 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
@@ -70,12 +72,12 @@ export default function Navbar({
         </button>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-8">
+        <div className="hidden md:flex items-center gap-6">
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => handleItemClick(item.id)}
-              className={`font-semibold text-sm transition-all relative pb-1 scroll-smooth cursor-pointer ${
+              className={`font-semibold text-xs transition-all relative pb-1 scroll-smooth cursor-pointer ${
                 activeSection === item.id || (activeSection === 'home' && item.id === 'home')
                   ? 'text-primary drop-shadow-[0_1px_3px_rgba(135,78,88,0.15)] font-bold'
                   : 'text-on-surface-variant hover:text-primary'
@@ -90,71 +92,63 @@ export default function Navbar({
           ))}
         </div>
 
-        {/* Quick action controls & Admin shortcut */}
+        {/* Quick action controls & Owner shortcut */}
         <div className="hidden md:flex items-center gap-3">
           {!isAdminAuthenticated ? (
             <button
               onClick={onLoginClick}
-              className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10.5px] font-black tracking-wider uppercase rounded-full shadow-xs transition-all flex items-center gap-1 cursor-pointer hover:scale-105 active:scale-95 duration-200 border border-rose-200/50"
+              className="px-3 py-1.5 bg-rose-50/80 hover:bg-rose-100 text-rose-800 text-[11px] font-bold rounded-full shadow-xs transition-all flex items-center gap-1.5 cursor-pointer border border-rose-200/50"
               id="desktop-login-button"
+              title="Bakery Owner Login"
             >
-              <Lock size={12} className="shrink-0" /> Owner Login
+              <Lock size={12} className="shrink-0" /> Owner Access
             </button>
           ) : (
-            <span className="text-[9px] uppercase font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/90 px-2 rounded-full flex items-center gap-1 select-none font-sans font-extrabold tracking-wide py-0.5">
-              <ShieldCheck size={11} className="shrink-0" /> Connected
-            </span>
+            <button
+              onClick={onAdminToggle}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                isAdminVisible 
+                  ? 'bg-primary text-white shadow-sm' 
+                  : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+              }`}
+            >
+              <ShieldCheck size={13} className="shrink-0 text-emerald-600" />
+              {isAdminVisible ? 'Close Panel' : '👑 Owner Portal'}
+            </button>
           )}
-
-          <button
-            onClick={onAdminToggle}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
-              isAdminVisible 
-                ? 'bg-primary text-white shadow-sm' 
-                : 'bg-surface-variant/40 text-on-surface-variant hover:bg-primary-container/20 hover:text-primary border border-outline-variant/35'
-            }`}
-          >
-            <ShieldAlert size={14} />
-            Admin Board
-          </button>
           
           <button
             onClick={() => handleItemClick('builder')}
-            className="px-5 py-2.5 bg-primary text-white font-semibold text-xs tracking-wider uppercase rounded-full shadow-md hover:bg-[#6b3741] hover:scale-105 active:scale-95 hover:shadow-lg transition-all duration-300"
+            className="px-4 py-2 bg-primary text-white font-bold text-xs tracking-wider uppercase rounded-full shadow-sm hover:bg-[#6b3741] hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer"
             id="nav-btn-order"
           >
-            Order Premium Cake
+            Book Cake Slot
           </button>
         </div>
 
         {/* Mobile Toggle */}
         <div className="md:hidden flex items-center gap-2">
-          {!isAdminAuthenticated && onLoginClick && (
+          {!isAdminAuthenticated ? (
             <button
               onClick={onLoginClick}
-              className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-black tracking-wide uppercase rounded-full shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-              id="mobile-login-button"
+              className="px-2.5 py-1 bg-rose-50 text-rose-800 text-[10px] font-bold rounded-full border border-rose-200 flex items-center gap-1"
             >
-              <Lock size={11} className="shrink-0" /> Login
+              <Lock size={10} /> Owner
+            </button>
+          ) : (
+            <button
+              onClick={onAdminToggle}
+              className="px-2.5 py-1 bg-emerald-50 text-emerald-800 text-[10px] font-bold rounded-full border border-emerald-200"
+            >
+              👑 Portal
             </button>
           )}
-          <button
-            onClick={onAdminToggle}
-            className={`p-2 rounded-full transition-all ${
-              isAdminVisible 
-                ? 'bg-[#ffb6c1] text-primary' 
-                : 'text-on-surface-variant hover:bg-primary-container/20 hover:text-primary'
-            }`}
-            title="Toggle Admin Board"
-          >
-            <ShieldAlert size={18} />
-          </button>
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="text-primary p-2 hover:bg-primary-container/20 rounded-full transition-colors"
             id="mobile-menu-btn"
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </div>

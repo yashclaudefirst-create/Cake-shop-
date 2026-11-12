@@ -1,99 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { gsap } from 'gsap';
-import { CakeCustomization, CustomerDetails, Order, CakeBuilderOptions, WebsiteConfig } from '../types';
+import React, { useState } from 'react';
+import { 
+  CakeCustomization, 
+  CustomerDetails, 
+  Order, 
+  CakeBuilderOptions, 
+  WebsiteConfig, 
+  CakeSlot 
+} from '../types';
 import { 
   Cake as CakeIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  UtensilsCrossed, 
-  Flame, 
   Calendar, 
   Clock, 
-  HelpCircle, 
   Check, 
   Sparkles, 
-  TrendingUp, 
-  ShoppingBag, 
-  User, 
-  Mail, 
   Phone, 
+  User, 
   MapPin, 
   Truck, 
-  Store,
-  MessageSquare,
-  Cookie,
+  Store, 
+  MessageSquare, 
+  Send,
+  ArrowRight,
+  ArrowLeft,
   Heart,
-  Share2,
-  Copy
+  ShieldCheck,
+  CheckCircle2
 } from 'lucide-react';
 import Cake3DPreview from './Cake3DPreview';
-
-const FLAVOUR_GROUPS: Record<string, { name: string; price: number; color: string }[]> = {
-  'EVERYDAY CLASSICS': [
-    { name: 'Classic Vanilla', price: 600, color: '#FFF8DC' },
-    { name: 'Black Forest', price: 700, color: '#3D1C02' },
-    { name: 'White Forest', price: 750, color: '#F5F5F5' },
-    { name: 'Chocolate', price: 750, color: '#4A2C2A' },
-    { name: 'Butterscotch', price: 850, color: '#DAA520' }
-  ],
-  'PREMIUM FAVOURITES': [
-    { name: 'Red Velvet', price: 850, color: '#8B0000' },
-    { name: 'Real Fruit Mango', price: 950, color: '#FFD700' },
-    { name: 'Honey Cake', price: 1250, color: '#FFA500' },
-    { name: 'Rose Milk', price: 1350, color: '#FFB6C1' },
-    { name: 'Tender Coconut', price: 1250, color: '#F5DEB3' }
-  ],
-  'CHOCOLATE & FUSION': [
-    { name: 'Chocolate Truffles', price: 1150, color: '#2C1810' },
-    { name: 'White Truffle', price: 1250, color: '#FFFACD' },
-    { name: 'Oreo Truffle', price: 1250, color: '#1C1C1C' },
-    { name: 'Tresleches Cake', price: 1250, color: '#FFF8F0' },
-    { name: 'Rasamalai', price: 1250, color: '#FFFACD' },
-    { name: 'Gulab Jamun', price: 1250, color: '#8B0000' },
-    { name: 'Milk Gova', price: 1350, color: '#FFDAB9' }
-  ],
-  'CELEBRATION SPECIALS': [
-    { name: 'KitKat', price: 1500, color: '#C0392B' },
-    { name: 'Ferro Rocher', price: 1600, color: '#8B6914' },
-    { name: 'Nutella', price: 1400, color: '#3E1C00' }
-  ],
-  'BROWNIES': [
-    { name: 'Brownie Slab 600g', price: 750, color: '#1A0A00' }
-  ],
-  'CUPCAKES': [
-    { name: 'Vanilla Cream Cupcake', price: 80, color: '#FFF8DC' },
-    { name: 'Belgian Chocolate Cupcake', price: 90, color: '#4A2C2A' },
-    { name: 'Strawberry Red Velvet Cupcake', price: 100, color: '#8B0000' }
-  ],
-  'MUFFINS': [
-    { name: 'Blueberry Soft Muffin', price: 90, color: '#4682B4' },
-    { name: 'Double Choc Chip Muffin', price: 100, color: '#2C1810' }
-  ],
-  'TRES LECHES': [
-    { name: 'Classic Tres Leches Soak', price: 350, color: '#FFF8F0' },
-    { name: 'Mango Season Tres Leches', price: 420, color: '#FFD700' },
-    { name: 'Rose Petal Milk Tres Leches', price: 450, color: '#FFB6C1' }
-  ],
-  'COOKIES': [
-    { name: 'Warm Chocolate Chip Cookie', price: 60, color: '#D2691E' },
-    { name: 'Rich Macadamia Oat Cookie', price: 70, color: '#F4A460' }
-  ]
-};
-
-const getFlavorPriceAndColor = (flavorName: string) => {
-  for (const group of Object.values(FLAVOUR_GROUPS)) {
-    const found = group.find(f => f.name === flavorName);
-    if (found) {
-      return { price: found.price, color: found.color };
-    }
-  }
-  return { price: 600, color: '#FFF8DC' };
-};
 
 interface CakeBuilderProps {
   onOrderAdded: (newOrder: Order) => void;
   builderOptions?: CakeBuilderOptions;
   websiteConfig?: WebsiteConfig;
+  cakeSlots?: CakeSlot[];
+  onSlotBooked?: (slotId: string) => void;
 }
 
 const INITIAL_CUSTOMER: CustomerDetails = {
@@ -104,1550 +44,724 @@ const INITIAL_CUSTOMER: CustomerDetails = {
   deliveryType: 'pickup'
 };
 
-export default function CakeBuilder({ onOrderAdded, builderOptions, websiteConfig }: CakeBuilderProps) {
-  // Safe fallback to match original values if no custom ones are stored
-  const options = builderOptions || {
-    sizes: [
-      { id: 'sz-1', name: 'Small (0.5kg) - 4-6 servings', description: 'Cute mini birthday standard size', price: 0 },
-      { id: 'sz-2', name: 'Medium (1.0kg) - 8-12 servings', description: 'Perfect family parlor gathering', price: 250 },
-      { id: 'sz-3', name: 'Large (2.0kg) - 16-20 servings', description: 'Festive office & larger groups', price: 550 },
-      { id: 'sz-4', name: 'Double Tier Luxury (3.0kg+) - 25-30 servings', description: 'Grand showstopper custom stacked tiers', price: 1050 }
-    ],
-    flavors: [
-      { id: 'fl-1', name: 'Classic Madagascar Vanilla Butter', price: 0 },
-      { id: 'fl-2', name: 'Rich Belgian Fudge Chocolate', price: 100 },
-      { id: 'fl-3', name: 'Velvety Red Velvet Cocoa', price: 150 },
-      { id: 'fl-4', name: 'Creamcheese Salted Butterscotch', price: 80 },
-      { id: 'fl-5', name: 'Summer Fresh Strawberry Cream', price: 80 },
-      { id: 'fl-6', name: 'Summer Juicy Red Watermelon', price: 180 }
-    ],
-    colors: [
-      { id: 'cl-1', name: 'Millennial Pink', code: '#ffb6c1', price: 0 },
-      { id: 'cl-2', name: 'Belgian Charcoal Fudge', code: '#4a3538', price: 0 },
-      { id: 'cl-3', name: 'Golden Banana Cream', code: '#e9c400', price: 0 },
-      { id: 'cl-4', name: 'Lavender Dreams', code: '#d8b4fe', price: 0 },
-      { id: 'cl-5', name: 'Mint Meadow', code: '#a7f3d0', price: 0 },
-      { id: 'cl-6', name: 'Emerald Watermelon Rind', code: '#2ecc71', price: 0 },
-      { id: 'cl-7', name: 'Pure Snow White', code: '#ffffff', price: 0 }
-    ],
-    dietary: [
-      { id: 'dt-1', name: 'Standard Cream Base', description: 'Fresh farm eggs and rich dairy cream', price: 0 },
-      { id: 'dt-2', name: '100% Pure Eggless Sponge', description: 'No eggs used inside workspace', price: 50 },
-      { id: 'dt-3', name: 'Certified Gluten-Free Base', description: 'Using organic almond or coconut starch', price: 120 },
-      { id: 'dt-4', name: 'Organic Vegan Dairy-Free', description: 'Using coconut butter and almond milk cream', price: 150 },
-      { id: 'dt-5', name: 'Healthy Sugar-Free Stevia Blend', description: 'Zero added processed refine sugar', price: 180 }
-    ],
-    fillings: [
-      { id: 'fi-1', name: 'Belgian Fudge', price: 80 },
-      { id: 'fi-2', name: 'Strawberry Cream', price: 90 },
-      { id: 'fi-3', name: 'Salted Caramel', price: 80 },
-      { id: 'fi-4', name: 'Nutella Blast', price: 120 },
-      { id: 'fi-5', name: 'Cookies n Cream', price: 70 },
-      { id: 'fi-6', name: 'Standard Cream Paste', price: 0 }
-    ],
-    toppings: [
-      { id: 'tp-1', name: 'Rainbow Sprinkles', price: 30 },
-      { id: 'tp-2', name: 'French Macarons & Organic Berries', price: 150 },
-      { id: 'tp-3', name: 'Edible 24k Gold Foil flakes', price: 200 },
-      { id: 'tp-4', name: 'Chocolate Ganache Drip', price: 60 },
-      { id: 'tp-5', name: 'Artisan Whipped Sugar Flowers', price: 80 },
-      { id: 'tp-6', name: 'Magic Edible Butterflies', price: 100 }
-    ],
-    sweetness: [
-      { id: 'sw-1', name: 'Balanced (Muted Sweetness)', description: 'Keeps cream taste primary with very mild sugars', price: 0 },
-      { id: 'sw-2', name: 'Standard Sweetness', description: 'Traditional perfect balanced sweet index', price: 0 },
-      { id: 'sw-3', name: 'Extra Sweet Richness', description: 'Bold sugary pop, perfect for chocoholics', price: 0 },
-      { id: 'sw-4', name: 'Stevia / Monk Fruit Sweetener', description: 'No spikes! Organic premium leaf crystals', price: 40 }
-    ],
-    frostings: [
-      { id: 'fr-1', name: 'Light Whipped Frosting', description: 'Fluffy air whipped sugar cream', price: 0 },
-      { id: 'fr-2', name: 'Swiss Meringue Buttercream', description: 'Rich velvety luxury finish', price: 100 },
-      { id: 'fr-3', name: 'New York Cream Cheese Frosting', description: 'Tangy dessert pastry favorite', price: 120 },
-      { id: 'fr-4', name: 'Rigid Rolled Fondant Sheet', description: 'Sleek custom sculpted cake finish', price: 150 }
-    ]
-  };
+const POPULAR_FLAVORS = [
+  { name: 'Classic Vanilla', category: 'cake', price: 600, color: '#FFF8DC', desc: 'Madagascar vanilla with light sponge' },
+  { name: 'Rich Belgian Chocolate', category: 'cake', price: 750, color: '#4A2C2A', desc: 'Dense dark chocolate with silky fudge' },
+  { name: 'Velvety Red Velvet', category: 'cake', price: 850, color: '#8B0000', desc: 'Classic cocoa sponge with rich cream' },
+  { name: 'Butterscotch Crunch', category: 'cake', price: 850, color: '#DAA520', desc: 'Caramelized praline crunch and cream' },
+  { name: 'Real Fruit Mango', category: 'cake', price: 950, color: '#FFD700', desc: 'Seasonal fresh fruit puree and whipped cream' },
+  { name: 'Manju Signature Chocolate Drip', category: 'cake', price: 950, color: '#2C1810', desc: "Chef's signature chocolate drip cake with rosettes" },
+  { name: 'Fudgy Brownie Slab (600g)', category: 'brownie', price: 750, color: '#1A0A00', desc: 'Thick, chewy dark chocolate walnut brownie' },
+  { name: 'Cashew Butter Cookies Box', category: 'cookies', price: 450, color: '#D2691E', desc: '100% cow butter with roasted cashew bites' }
+];
 
-  const getInitialCustomization = (): CakeCustomization => ({
-    category: 'cake',
-    shape: 'Classic Round',
-    size: '1kg Portion (approx. 8-12 servings)',
-    baseFlavor: 'Classic Vanilla',
-    baseColor: '#FFF8DC',
-    baseColorName: 'Classic Vanilla',
-    dietary: options.dietary[0]?.name || '',
-    fillings: options.fillings[0]?.name || '',
-    sweetness: options.sweetness[1]?.name || options.sweetness[0]?.name || '',
-    frostingType: options.frostings[0]?.name || '',
-    toppings: [],
-    occasion: 'Birthday Celebration',
-    messageOnCake: '',
-    deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
-    deliveryTimeSlot: 'Evening Twilight (06:00 PM - 09:00 PM)',
-    specialInstructions: ''
+const SIZES = [
+  { name: 'Small (0.5kg)', priceMultiplier: 0.65, desc: '4-6 servings' },
+  { name: 'Standard (1.0kg)', priceMultiplier: 1.0, desc: '8-12 servings' },
+  { name: 'Large (2.0kg)', priceMultiplier: 1.9, desc: '16-20 servings' },
+  { name: 'Double Tier (3.0kg+)', priceMultiplier: 3.0, desc: 'Celebration showstopper' }
+];
+
+export default function CakeBuilder({ 
+  onOrderAdded, 
+  builderOptions, 
+  websiteConfig,
+  cakeSlots = [],
+  onSlotBooked 
+}: CakeBuilderProps) {
+
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [selectedFlavor, setSelectedFlavor] = useState(POPULAR_FLAVORS[1]); // Belgian Chocolate default
+  const [selectedSize, setSelectedSize] = useState(SIZES[1]); // 1.0kg
+  const [isEggless, setIsEggless] = useState(false);
+  const [selectedSlotId, setSelectedSlotId] = useState<string>(() => {
+    const active = cakeSlots.find(s => s.isActive && (s.maxCapacity - s.bookedCount) > 0);
+    return active ? active.id : '';
   });
-
-  const [step, setStep] = useState(1);
-  const [customization, setCustomization] = useState<CakeCustomization>(getInitialCustomization);
+  const [customDate, setCustomDate] = useState(() => {
+    const d = new Date(Date.now() + 86400000);
+    return d.toISOString().split('T')[0];
+  });
+  const [customTime, setCustomTime] = useState('10:00 AM - 01:00 PM');
+  const [messageOnCake, setMessageOnCake] = useState('');
   const [customer, setCustomer] = useState<CustomerDetails>(INITIAL_CUSTOMER);
+  const [specialNotes, setSpecialNotes] = useState('');
   const [validationError, setValidationError] = useState('');
   const [submittedOrder, setSubmittedOrder] = useState<Order | null>(null);
-  const [showShareOptions, setShowShareOptions] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
 
-  const getShareSummaryText = (orderData?: Order) => {
-    const activeCustomization = orderData ? orderData.customization : customization;
-    const activePrice = orderData ? orderData.totalPrice : calculatePrice();
-    const toppingsStr = activeCustomization.toppings.length > 0 ? activeCustomization.toppings.join(', ') : 'None';
-    
-    return `🎂 *My Custom Confection on Krish Dreamy Delight* 🎂
+  // Active cake slot object
+  const activeSlot = cakeSlots.find(s => s.id === selectedSlotId);
 
-- *Category*: ${activeCustomization.category.toUpperCase()}
-- *Flavour*: ${activeCustomization.baseFlavor}
-- *Shape*: ${activeCustomization.shape}
-- *Size*: ${activeCustomization.size}
-- *Cream*: ${activeCustomization.frostingType}
-- *Color*: ${activeCustomization.baseColorName}
-- *Toppings*: ${toppingsStr}
-- *Diet*: ${activeCustomization.dietary}
-- *Occasion*: ${activeCustomization.occasion}
-- *Inscription*: "${activeCustomization.messageOnCake || 'None'}"
-- *Estimated Price*: ₹${activePrice}
-
-Designed using Krish Dreamy Delight's interactive Cake Builder! Check it out: ${window.location.origin}`;
+  // Price calculation
+  const calculateTotal = (): number => {
+    let base = Math.round(selectedFlavor.price * selectedSize.priceMultiplier);
+    if (isEggless) base += 50;
+    if (customer.deliveryType === 'delivery') base += 80;
+    return base;
   };
 
-  const handleShareCreation = async (orderData?: Order) => {
-    const summaryText = getShareSummaryText(orderData);
-    const shareData = {
-      title: "My Custom Dreamy Delight Design",
-      text: summaryText,
-      url: window.location.origin
+  const totalPrice = calculateTotal();
+
+  const handleNextStep = () => {
+    setValidationError('');
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      if (!selectedSlotId && !customDate) {
+        setValidationError('Please select a cake baking slot or custom delivery date.');
+        return;
+      }
+      setStep(3);
+    }
+  };
+
+  const handlePrevStep = () => {
+    setValidationError('');
+    setStep(prev => (prev === 3 ? 2 : 1));
+  };
+
+  const buildOrderObject = (): Order => {
+    const deliveryDate = activeSlot ? activeSlot.date : customDate;
+    const deliverySlot = activeSlot ? activeSlot.timeWindow : customTime;
+
+    const customization: CakeCustomization = {
+      category: selectedFlavor.category as any,
+      shape: 'Classic Round',
+      size: selectedSize.name,
+      baseFlavor: selectedFlavor.name,
+      baseColor: selectedFlavor.color,
+      baseColorName: selectedFlavor.name,
+      dietary: isEggless ? '100% Pure Eggless' : 'Standard Cream Base',
+      fillings: 'Belgian Fudge',
+      sweetness: 'Standard Sweetness',
+      frostingType: 'Light Whipped Frosting',
+      toppings: ['Fresh Cream Rosettes', 'Chocolate Drip'],
+      occasion: 'Celebration',
+      messageOnCake: messageOnCake.trim(),
+      deliveryDate: deliveryDate,
+      deliveryTimeSlot: deliverySlot,
+      slotId: activeSlot ? activeSlot.id : undefined,
+      specialInstructions: specialNotes.trim()
     };
 
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      try {
-        await navigator.share(shareData);
-      } catch (err) {
-        console.warn("Native share failed or dismissed", err);
-        setShowShareOptions(true);
-      }
-    } else {
-      setShowShareOptions(true);
-    }
+    return {
+      id: `KDD-${Math.floor(10000 + Math.random() * 90000)}`,
+      customization,
+      customer,
+      totalPrice,
+      status: 'Received',
+      createdAt: new Date().toLocaleString('en-US', { hour12: true }),
+      slotId: activeSlot ? activeSlot.id : undefined
+    };
   };
 
-  const handleCopyShareText = (orderData?: Order) => {
-    const text = getShareSummaryText(orderData);
-    navigator.clipboard.writeText(text).then(() => {
-      setShareCopied(true);
-      setTimeout(() => setShareCopied(false), 3000);
-    });
-  };
-
-  // GSAP Baking Sequence state indicators
-  const [isBaking, setIsBaking] = useState(false);
-  const [bakingPercent, setBakingPercent] = useState(0);
-  const [bakingStage, setBakingStage] = useState<'prep' | 'mix' | 'oven' | 'ice' | 'decor' | 'finish'>('prep');
-  const [bakingStatusMessage, setBakingStatusMessage] = useState('Preheating luxury deck ovens...');
-
-  // Pricing calculation helper linked completely to dynamic builderOptions
-  const calculatePrice = (): number => {
-    const { price: baseFlavorPrice } = getFlavorPriceAndColor(customization.baseFlavor);
-    let basePrice = baseFlavorPrice;
-
-    // Size multiplier
-    let sizeMultiplier = 1.0;
-    if (customization.category === 'cake') {
-      if (customization.size.includes('500g') || customization.size.includes('0.5kg')) {
-        sizeMultiplier = 0.6;
-      } else if (customization.size.includes('2kg') || customization.size.includes('2.0kg')) {
-        sizeMultiplier = 1.8;
-      } else if (customization.size.includes('1kg') || customization.size.includes('1.0kg')) {
-        sizeMultiplier = 1.0;
-      }
-    } else if (customization.category === 'cupcake' || customization.category === 'muffin' || customization.category === 'cookies') {
-      if (customization.size.includes('Box of 6')) {
-        sizeMultiplier = 6.0;
-      } else if (customization.size.includes('Box of 12')) {
-        sizeMultiplier = 11.0;
-      } else {
-        sizeMultiplier = 1.0;
-      }
-    } else if (customization.category === 'tres_leches') {
-      if (customization.size.includes('Medium')) {
-        sizeMultiplier = 2.0;
-      } else if (customization.size.includes('Party')) {
-        sizeMultiplier = 3.5;
-      } else {
-        sizeMultiplier = 1.0;
-      }
-    }
-
-    let calculated = Math.round(basePrice * sizeMultiplier);
-
-    // Dietary additions
-    const dietaryOpt = options.dietary.find(d => d.name === customization.dietary);
-    if (dietaryOpt) calculated += dietaryOpt.price;
-
-    // Fillings
-    const fillingsOpt = options.fillings.find(f => f.name === customization.fillings);
-    if (fillingsOpt) calculated += fillingsOpt.price;
-
-    // Sweetness
-    const sweetnessOpt = options.sweetness.find(sw => sw.name === customization.sweetness);
-    if (sweetnessOpt) calculated += sweetnessOpt.price;
-
-    // Frosting
-    const frostingOpt = options.frostings.find(fr => fr.name === customization.frostingType);
-    if (frostingOpt) calculated += frostingOpt.price;
-
-    // Toppings cumulative sum
-    customization.toppings.forEach(top => {
-      const toppingOpt = options.toppings.find(t => t.name === top);
-      if (toppingOpt) calculated += toppingOpt.price;
-    });
-
-    // Special slots (e.g. Midnight)
-    if (customization.deliveryTimeSlot.includes('Midnight')) calculated += 150;
-
-    // Delivery charge
-    if (customer.deliveryType === 'delivery') calculated += 80;
-
-    return calculated;
-  };
-
-
-
-  // Step Navigators
-  const nextStep = () => {
-    if (step === 13) {
-      if (!customer.name.trim()) return setValidationError('Please provide your name.');
-      if (!customer.email.trim() || !customer.email.includes('@')) return setValidationError('Please enter a valid email address.');
-      if (!customer.phone.trim() || customer.phone.length < 8) return setValidationError('Please enter a valid phone contact.');
-      if (customer.deliveryType === 'delivery' && !customer.address.trim()) return setValidationError('Please provide an address for home delivery.');
-    }
-    setValidationError('');
-    setStep((prev) => Math.min(prev + 1, 14));
-  };
-
-  const prevStep = () => {
-    setValidationError('');
-    setStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleToppingToggle = (topping: string) => {
-    setCustomization((prev) => {
-      const exists = prev.toppings.includes(topping);
-      const nextToppings = exists
-        ? prev.toppings.filter((t) => t !== topping)
-        : [...prev.toppings, topping];
-      return { ...prev, toppings: nextToppings };
-    });
-  };
-
-  const resetBuilder = () => {
-    setCustomization(getInitialCustomization());
-    setCustomer(INITIAL_CUSTOMER);
-    setStep(1);
-    setSubmittedOrder(null);
-  };
-
-  const handleSubmitOrder = (e: React.FormEvent) => {
+  const handleConfirmOrder = (e: React.FormEvent) => {
     e.preventDefault();
-    // Start gorgeous GSAP baking sequence!
-    setIsBaking(true);
+    if (!customer.name.trim()) return setValidationError('Please enter your name.');
+    if (!customer.phone.trim() || customer.phone.length < 8) return setValidationError('Please enter a valid phone number.');
+    if (customer.deliveryType === 'delivery' && !customer.address.trim()) return setValidationError('Please provide your delivery address.');
+
+    const newOrder = buildOrderObject();
+    onOrderAdded(newOrder);
+
+    if (activeSlot && onSlotBooked) {
+      onSlotBooked(activeSlot.id);
+    }
+
+    setSubmittedOrder(newOrder);
   };
 
-  // GSAP animated sequence scheduler
-  useEffect(() => {
-    if (!isBaking) return;
+  const handleWhatsAppOrder = () => {
+    if (!customer.name.trim()) return setValidationError('Please enter your name before ordering.');
+    if (!customer.phone.trim()) return setValidationError('Please enter your phone number.');
 
-    setBakingPercent(0);
-    setBakingStage('prep');
-    setBakingStatusMessage('Preheating deck ovens and calling chef assistants...');
+    const newOrder = buildOrderObject();
+    onOrderAdded(newOrder);
 
-    const tl = gsap.timeline({
-      onComplete: () => {
-        const newOrder: Order = {
-          id: `SPOT-${Math.floor(10000 + Math.random() * 90000)}`,
-          customization,
-          customer,
-          totalPrice: calculatePrice(),
-          status: 'Received',
-          createdAt: new Date().toLocaleString('en-US', { hour12: true })
-        };
-        // Save to dynamic lists
-        onOrderAdded(newOrder);
-        setSubmittedOrder(newOrder);
-        setIsBaking(false);
-      }
-    });
+    if (activeSlot && onSlotBooked) {
+      onSlotBooked(activeSlot.id);
+    }
 
-    // 1. Preparation Stage
-    tl.to({}, {
-      duration: 1.5,
-      onStart: () => {
-        setBakingStage('prep');
-        setBakingStatusMessage('Measuring organic flour, brown sugar, and high-fat creamery butter...');
-      },
-      onUpdate: function() {
-        setBakingPercent(Math.floor(this.progress() * 25));
-      }
-    });
+    setSubmittedOrder(newOrder);
 
-    // 2. Mixing Stage
-    tl.to({}, {
-      duration: 1.5,
-      onStart: () => {
-        setBakingStage('mix');
-        setBakingStatusMessage('Whisking premium egg batters with organic vanilla extracts...');
-      },
-      onUpdate: function() {
-        setBakingPercent(25 + Math.floor(this.progress() * 25));
-      }
-    });
+    const waNum = websiteConfig?.whatsappNumber || '919865621880';
+    const text = encodeURIComponent(
+      `Hello Krish Dreamy Delight! 🍰\n\nI want to book a cake:\n• Order ID: ${newOrder.id}\n• Flavour: ${selectedFlavor.name}\n• Size: ${selectedSize.name}\n• Diet: ${isEggless ? 'Pure Eggless' : 'Standard'}\n• Slot: ${activeSlot ? `${activeSlot.title} (${activeSlot.date} @ ${activeSlot.timeWindow})` : `${customDate} @ ${customTime}`}\n• Inscription: "${messageOnCake || 'None'}"\n• Total: ₹${totalPrice}\n• Name: ${customer.name}\n• Phone: ${customer.phone}\n• Method: ${customer.deliveryType === 'delivery' ? `Delivery (${customer.address})` : 'Self Pickup'}\n\nPlease confirm my baking slot!`
+    );
 
-    // 3. Baking In Oven
-    tl.to({}, {
-      duration: 1.8,
-      onStart: () => {
-        setBakingStage('oven');
-        setBakingStatusMessage(`Baking the fluffy ${customization.baseFlavor} base core at 175°C...`);
-      },
-      onUpdate: function() {
-        setBakingPercent(50 + Math.floor(this.progress() * 25));
-      }
-    });
+    window.open(`https://wa.me/${waNum}?text=${text}`, '_blank');
+  };
 
-    // 4. Frosting Application
-    tl.to({}, {
-      duration: 1.4,
-      onStart: () => {
-        setBakingStage('ice');
-        setBakingStatusMessage(`Cooling core, preparing piping bags, and sifting ${customization.baseColorName} frosting...`);
-      },
-      onUpdate: function() {
-        setBakingPercent(75 + Math.floor(this.progress() * 20));
-      }
-    });
-
-    // 5. Finishing Decorations
-    tl.to({}, {
-      duration: 1.3,
-      onStart: () => {
-        setBakingStage('decor');
-        setBakingStatusMessage('Securing dynamic toppings, piping details, and boxing order...');
-      },
-      onUpdate: function() {
-        setBakingPercent(95 + Math.floor(this.progress() * 5));
-      }
-    });
-
-    tl.to({}, {
-      duration: 0.5,
-      onStart: () => {
-        setBakingStage('finish');
-        setBakingStatusMessage('Master creation fully boxed and sealed!');
-      }
-    });
-
-    return () => {
-      tl.kill();
-    };
-  }, [isBaking, customization, customer]);
+  const resetForm = () => {
+    setSubmittedOrder(null);
+    setStep(1);
+    setMessageOnCake('');
+    setCustomer(INITIAL_CUSTOMER);
+    setSpecialNotes('');
+  };
 
   return (
-    <section id="builder" className="py-20 bg-[#fff1ea]/60 relative select-none">
+    <section id="builder" className="py-20 bg-gradient-to-b from-white via-[#fff8f5] to-white select-none">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         
-        {/* Intro branding */}
-        <div className="text-center mb-12">
-          <span className="p-1 px-3 bg-primary/15 text-primary text-[10px] font-bold rounded-full tracking-widest uppercase">
-            Artisanal Confectionery Engine
+        {/* Section Header */}
+        <div className="text-center mb-12 space-y-3">
+          <span className="p-1 px-3.5 bg-primary/10 text-primary text-[10px] font-bold rounded-full tracking-widest uppercase inline-block">
+            Easy 3-Step Cake Booking
           </span>
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary mt-2">
-            Design Your Dream Confection
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-primary tracking-tight">
+            Reserve Your Fresh Cake Slot
           </h2>
-          <p className="font-sans text-sm text-on-surface-variant max-w-md mx-auto mt-2">
-            Customize every tier, flavor, and decoration step-by-step. Watch your cake update dynamically in real-time.
+          <p className="font-sans text-sm text-on-surface-variant max-w-lg mx-auto font-medium">
+            Handmade from scratch for your special celebration. Pick your flavor, reserve your daily slot, and enjoy warm oven-fresh quality.
           </p>
         </div>
 
-        {isBaking ? (
-          /* GSAP Animated Baking Sequence overlay */
-          <div className="max-w-3xl mx-auto bg-white/70 backdrop-blur-md border border-primary-container/40 rounded-3xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[520px] shadow-xl relative overflow-hidden animate-fade-in text-left">
-            {/* Decorative background blurs */}
-            <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 filter blur-2xl rounded-full" />
-            <div className="absolute bottom-0 right-0 w-32 h-32 bg-secondary/5 filter blur-2xl rounded-full" />
-
-            <div className="text-center mb-8 max-w-md z-15">
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-500/10 text-amber-850 text-[10px] font-bold rounded-full tracking-widest uppercase mb-3 animate-pulse">
-                <Sparkles size={11} className="text-[#e9c400] fill-current" /> Bakery Laboratory Slot Active <Sparkles size={11} className="text-[#e9c400] fill-current" />
-              </span>
-              <h3 className="font-display text-2xl md:text-3xl font-black text-primary tracking-tight">
-                Baking Your Dream Recipe...
-              </h3>
-              <p className="font-sans text-xs text-[#847375] mt-2">
-                Our kitchen artisans are composing your exact details into a glorious confection slab.
-              </p>
+        {/* ORDER SUCCESS DISPLAY */}
+        {submittedOrder ? (
+          <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 border-2 border-emerald-300 shadow-xl text-center space-y-6 animate-scale-up">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
+              <CheckCircle2 size={36} />
             </div>
 
-            {/* GSAP Target Workbench Card */}
-            <div className="relative w-full max-w-lg h-72 bg-gradient-to-br from-[#fffdfc] to-[#fff8f5] border border-[#d6c2c3]/30 rounded-2xl flex flex-col items-center justify-center overflow-hidden p-6 shadow-inner z-10">
-              
-              {/* OVEN STEAM RAYS */}
-              <div className="absolute top-4 inset-x-6 flex justify-between px-4 opacity-40">
-                <div className="h-1 w-16 bg-primary/20 rounded-full animate-pulse" />
-                <div className="h-1 w-12 bg-primary/20 rounded-full animate-pulse delay-75" />
-                <div className="h-1 w-20 bg-primary/20 rounded-full animate-pulse delay-150" />
-              </div>
-
-              {/* STAGE-SPECIFIC ANIMATED CONTAINER */}
-              <div className="flex-1 w-full flex items-center justify-center relative">
-                
-                {/* 1. PREP STAGE */}
-                {bakingStage === 'prep' && (
-                  <div className="flex items-center gap-8 justify-center animate-fade-in text-left">
-                    <div className="baking-egg flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
-                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Fresh Eggs</span>
-                    </div>
-                    <div className="baking-flour flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
-                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Flour</span>
-                    </div>
-                    <div className="baking-sugar flex flex-col items-center justify-center bg-white p-4 h-24 w-24 rounded-2xl shadow-sm border border-primary/10">
-                      <Sparkles className="w-6 h-6 text-primary animate-pulse" />
-                      <span className="text-[9px] font-black text-primary mt-2 uppercase tracking-wider text-center leading-none">Organic Nectar</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. MIXING STAGE */}
-                {bakingStage === 'mix' && (
-                  <div className="flex flex-col items-center justify-center animate-fade-in text-left">
-                    <div className="baking-bowl relative w-28 h-20 bg-neutral-200 border-b-8 border-x-4 border-neutral-300 rounded-b-full shadow-inner flex items-center justify-center">
-                      <div className="absolute bottom-1 inset-x-1 h-9 bg-amber-100 rounded-b-full animate-pulse" />
-                      <div className="baking-whisk absolute bottom-4 text-primary">
-                        <Sparkles className="w-6 h-6 animate-spin text-primary" />
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-black text-amber-800 uppercase mt-4 block tracking-wider animate-pulse">
-                      High-Speed Electric Whisk Action...
-                    </span>
-                  </div>
-                )}
-
-                {/* 3. baking OVEN STAGE */}
-                {bakingStage === 'oven' && (
-                  <div className="flex flex-col items-center justify-center animate-fade-in w-full text-left">
-                    <div className="relative w-56 h-36 bg-zinc-800 rounded-2xl border-4 border-zinc-700 shadow-2xl flex flex-col justify-between overflow-hidden">
-                      <div className="bg-zinc-700 h-6 border-b border-zinc-650 flex items-center justify-between px-3 text-[8px] text-orange-400 font-mono">
-                        <span>CONVECTION</span>
-                        <span>175°C [ACTIVE]</span>
-                      </div>
-                      
-                      <div className="flex-1 bg-zinc-950/90 relative flex items-center justify-center p-3">
-                        <div className="oven-glow absolute inset-0 bg-radial-at-t from-orange-600/30 via-transparent to-transparent pointer-events-none" />
-                        
-                        <div className="relative w-28 h-16 flex flex-col justify-end">
-                          <div className="baking-sponge w-24 h-12 bg-amber-800 border-t-2 border-amber-500 rounded-t-xl mx-auto z-10" />
-                          <div className="w-28 h-4 bg-zinc-400 rounded-b-md border-t border-zinc-300 relative z-20" />
-                        </div>
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-black text-[#874e58] uppercase mt-3 block tracking-wide">
-                      Core sponge rising inside convection oven...
-                    </span>
-                  </div>
-                )}
-
-                {/* 4. FROSTING ASSEMBLY STAGE */}
-                {bakingStage === 'ice' && (
-                  <div className="flex flex-col items-center justify-center animate-fade-in text-left">
-                    <div className="relative flex flex-col items-center justify-center">
-                      <div className="baking-sponge-color w-32 h-16 rounded-t-xl relative border-b-2 border-primary/25 flex flex-col items-center justify-center shadow-lg"
-                           style={{ backgroundColor: customization.baseColor }}>
-                        <div className="w-full h-1 bg-white/40 absolute top-1/2" />
-                      </div>
-                      
-                      <div className="baking-spatula absolute -top-4 z-30 filter drop-shadow-md text-white">
-                        <Sparkles className="w-8 h-8 text-white fill-amber-200 animate-bounce" />
-                      </div>
-                    </div>
-                    <span className="text-[9px] font-black text-[#874e58] uppercase mt-4 block tracking-wide">
-                      Coat application in progress...
-                    </span>
-                  </div>
-                )}
-
-                {/* 5. FINISHING DECOR STAGE */}
-                {bakingStage === 'decor' && (
-                  <div className="flex flex-col items-center justify-center animate-fade-in w-full text-left">
-                    <div className="relative flex flex-col items-center pt-8 scale-110">
-                      <div className="w-32 h-18 rounded-t-xl rounded-b-md relative border-b-4 border-amber-950/20 flex flex-col items-center justify-center shadow-lg"
-                           style={{ backgroundColor: customization.baseColor }}>
-                        
-                        <div className="w-full h-1 bg-white/30 absolute top-1/3" />
-                        
-                        {customization.messageOnCake && (
-                          <div className="absolute top-[25%] inset-x-2 text-center pointer-events-none">
-                            <span className="font-cursive text-[7px] px-1 py-0.5 rounded text-amber-950 bg-white/80 font-bold block truncate max-w-[75px] mx-auto">
-                              {customization.messageOnCake}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="baking-topping-particles absolute -top-8 flex gap-2 text-lg">
-                        {customization.toppings.slice(0, 3).map((top, idx) => {
-                          let color = '#FFD700';
-                          if (top.includes('Sprinkles')) color = '#FF69B4';
-                          else if (top.includes('Flower')) color = '#FF81C1';
-                          else if (top.includes('Butterflies')) color = '#E6C280';
-                          else if (top.includes('Ganache')) color = '#4A2C2A';
-                          return (
-                            <span key={idx} className="animate-bounce" style={{ animationDelay: `${idx * 0.1}s` }}>
-                              <Sparkles className="w-5 h-5" style={{ color }} />
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 6. COMPLETE STAGE */}
-                {bakingStage === 'finish' && (
-                  <div className="flex flex-col items-center justify-center animate-fade-in text-center text-left">
-                    <span className="text-5xl animate-bounce">🎁</span>
-                    <span className="text-xs font-bold text-emerald-700 tracking-wider uppercase mt-4 block">
-                      Perfect Recipe Complete!
-                    </span>
-                  </div>
-                )}
-
-              </div>
-
-            </div>
-
-            {/* PROGRESS TICKER FOR USER ACCESSIBILITY */}
-            <div className="w-full max-w-lg mt-6 space-y-3 z-10 text-left">
-              <div className="flex justify-between items-center text-[11px] font-black uppercase text-primary tracking-wider font-mono">
-                <span>Confection Assembly Status:</span>
-                <span>{bakingPercent}%</span>
-              </div>
-
-              <div className="w-full h-3 bg-primary/10 rounded-full p-0.5 overflow-hidden border border-primary/20">
-                <div 
-                  className="h-full bg-gradient-to-r from-primary via-secondary to-emerald-600 rounded-full transition-all duration-100 shadow-inner" 
-                  style={{ width: `${bakingPercent}%` }}
-                />
-              </div>
-
-              <p className="text-center font-display text-xs font-black uppercase text-primary tracking-widest animate-pulse h-6">
-                {bakingStatusMessage}
-              </p>
-
-              {/* Human step indicators */}
-              <div className="grid grid-cols-5 gap-1 pt-2 text-[8px] font-black tracking-wider text-[#847375] uppercase font-sans text-center">
-                <span className={`p-1.5 rounded-lg border ${bakingStage === 'prep' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>1. Prep</span>
-                <span className={`p-1.5 rounded-lg border ${bakingStage === 'mix' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>2. Mix</span>
-                <span className={`p-1.5 rounded-lg border ${bakingStage === 'oven' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>3. Bake</span>
-                <span className={`p-1.5 rounded-lg border ${bakingStage === 'ice' ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>4. Frost</span>
-                <span className={`p-1.5 rounded-lg border ${['decor', 'finish'].includes(bakingStage) ? 'bg-primary text-white border-primary' : 'bg-white border-primary/10'}`}>5. Decor</span>
-              </div>
-            </div>
-
-          </div>
-        ) : submittedOrder ? (
-          /* Confirmation Success Panel */
-          <div className="max-w-xl mx-auto glass-card rounded-3xl p-8 text-center border border-primary-container space-y-6 animate-bounce-slight">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 mx-auto">
-              <Check size={36} className="stroke-[3]" />
-            </div>
-            
             <div className="space-y-2">
-              <span className="text-[10px] font-bold tracking-widest bg-emerald-500/10 text-emerald-800 px-3 py-1 rounded-full uppercase">
-                Order Received Successfully
+              <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+                Booking Confirmed • {submittedOrder.id}
               </span>
-              <h3 className="font-display text-2xl font-bold text-primary">
-                Your Baking Slot is Booked!
+              <h3 className="font-display text-2xl font-black text-primary">
+                Thank You, {submittedOrder.customer.name}!
               </h3>
-              <p className="font-sans text-xs text-on-surface-variant leading-relaxed">
-                {websiteConfig?.customerAutoMsg 
-                  ? websiteConfig.customerAutoMsg.replace('{orderId}', submittedOrder.id)
-                  : `We've locked in your recipe slot. A sweet confirmation slip has been logged under ID: ${submittedOrder.id}.`}
+              <p className="font-sans text-xs text-zinc-650 max-w-md mx-auto leading-relaxed">
+                Your cake slot has been successfully scheduled at Krish Dreamy Delight. Chef Krish has logged your recipe into the kitchen batch!
               </p>
             </div>
-            
-            {/* Structured Recipe Summary */}
-            <div className="bg-[#fff8f5] p-5 rounded-2xl text-left border border-primary-container/20 text-xs space-y-2 font-mono divide-y divide-primary-container/20">
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Baker Code:</span> <span className="font-bold text-primary">{submittedOrder.id}</span></div>
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Recipient:</span> <span className="font-bold">{submittedOrder.customer.name}</span></div>
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Selected Base:</span> <span className="font-bold">{submittedOrder.customization.category.toUpperCase()} ({submittedOrder.customization.baseFlavor})</span></div>
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Frosting Color:</span> <span className="font-bold">{submittedOrder.customization.baseColorName}</span></div>
-              <div className="py-1.5 flex justify-between"><span className="text-on-surface-variant">Dietary Preference:</span> <span className="font-bold">{submittedOrder.customization.dietary}</span></div>
-              {submittedOrder.customization.messageOnCake && (
-                <div className="py-1.5 flex justify-between text-pink-700 italic"><span className="text-on-surface-variant">Topper Inscription:</span> <span>"{submittedOrder.customization.messageOnCake}"</span></div>
-              )}
-              <div className="py-1.5 flex justify-between">
-                <span className="text-on-surface-variant">Dispatch:</span> 
-                <span className="font-bold flex items-center gap-1">
-                  {submittedOrder.customer.deliveryType === 'delivery' ? (
-                    <>
-                      <Truck size={13} className="text-primary" />
-                      <span>Home Delivery</span>
-                    </>
-                  ) : (
-                    <>
-                      <Store size={13} className="text-primary" />
-                      <span>Studio Self-Pickup</span>
-                    </>
-                  )}
+
+            {/* Receipt Summary Card */}
+            <div className="bg-[#fff8f5] p-5 rounded-2xl border border-primary/10 text-left text-xs space-y-2 font-sans">
+              <div className="flex justify-between border-b border-[#d6c2c3]/40 pb-2">
+                <span className="text-zinc-500 font-bold uppercase text-[10px]">Item / Flavour:</span>
+                <span className="font-bold text-primary">{submittedOrder.customization.baseFlavor}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#d6c2c3]/40 pb-2">
+                <span className="text-zinc-500 font-bold uppercase text-[10px]">Portion & Diet:</span>
+                <span className="font-semibold">{submittedOrder.customization.size} • {submittedOrder.customization.dietary}</span>
+              </div>
+              <div className="flex justify-between border-b border-[#d6c2c3]/40 pb-2">
+                <span className="text-zinc-500 font-bold uppercase text-[10px]">Reserved Slot:</span>
+                <span className="font-mono font-bold text-primary">
+                  {submittedOrder.customization.deliveryDate} ({submittedOrder.customization.deliveryTimeSlot})
                 </span>
               </div>
-              <div className="py-2 flex justify-between text-base font-bold text-primary pt-3"><span className="font-display uppercase tracking-wider text-xs">Settled Total:</span> <span>₹{submittedOrder.totalPrice}</span></div>
+              {submittedOrder.customization.messageOnCake && (
+                <div className="flex justify-between border-b border-[#d6c2c3]/40 pb-2">
+                  <span className="text-zinc-500 font-bold uppercase text-[10px]">Cake Inscription:</span>
+                  <span className="font-bold italic text-[#874e58]">"{submittedOrder.customization.messageOnCake}"</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1 text-sm font-bold">
+                <span className="text-primary font-display">Total Amount:</span>
+                <span className="text-primary font-mono text-base">₹{submittedOrder.totalPrice}</span>
+              </div>
             </div>
 
-            <div className="pt-2 space-y-3">
-              <a
-                href={(() => {
-                  const adminPhoneNum = websiteConfig?.whatsappNumber || "919865621880";
-                  let orderDetails = "";
-                  if (websiteConfig?.whatsappMsgTemplate) {
-                    orderDetails = websiteConfig.whatsappMsgTemplate
-                      .replace(/{category}/g, submittedOrder.customization.category)
-                      .replace(/{flavor}/g, submittedOrder.customization.baseFlavor)
-                      .replace(/{price}/g, String(submittedOrder.totalPrice))
-                      .replace(/{shape}/g, submittedOrder.customization.shape)
-                      .replace(/{size}/g, submittedOrder.customization.size)
-                      .replace(/{cream}/g, submittedOrder.customization.frostingType)
-                      .replace(/{toppings}/g, submittedOrder.customization.toppings.join(', ') || 'None')
-                      .replace(/{diet}/g, submittedOrder.customization.dietary)
-                      .replace(/{message}/g, submittedOrder.customization.messageOnCake || 'None')
-                      .replace(/{deliveryDate}/g, submittedOrder.customization.deliveryDate);
-                  } else {
-                    orderDetails = `Hi Krish Dreamy Delight!
-I want to place an order:
-
-- Category: ${submittedOrder.customization.category}
-- Flavour: ${submittedOrder.customization.baseFlavor}
-- Price: ₹${submittedOrder.totalPrice}
-- Shape: ${submittedOrder.customization.shape}
-- Size: ${submittedOrder.customization.size}
-- Cream: ${submittedOrder.customization.frostingType}
-- Theme: ${submittedOrder.customization.occasion}
-- Stickers: ${submittedOrder.customization.toppings.join(', ') || 'None'}
-- Toppings: ${submittedOrder.customization.toppings.join(', ') || 'None'}
-- Occasion: ${submittedOrder.customization.occasion}
-- Diet: ${submittedOrder.customization.dietary}
-- Name on cake: ${submittedOrder.customization.messageOnCake || 'None'}
-- Delivery date: ${submittedOrder.customization.deliveryDate}
-
-Please confirm availability!`;
-                  }
-                  return `https://wa.me/${adminPhoneNum.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(orderDetails)}`;
-                })()}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase rounded-full shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer text-center"
-              >
-                <MessageSquare size={14} className="stroke-[2.5]" />
-                Direct Message Order details to Baker (WhatsApp DM)
-              </a>
-
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => handleShareCreation(submittedOrder)}
-                className="w-full py-3 bg-[#e0566d] hover:bg-[#c93b52] text-white text-xs font-bold uppercase rounded-full shadow-md flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all duration-200 cursor-pointer text-center"
+                onClick={() => {
+                  const waNum = websiteConfig?.whatsappNumber || '919865621880';
+                  const text = encodeURIComponent(
+                    `Hi Krish Dreamy Delight! Here is my confirmed order ID: ${submittedOrder.id} for ${submittedOrder.customization.baseFlavor} on ${submittedOrder.customization.deliveryDate}.`
+                  );
+                  window.open(`https://wa.me/${waNum}?text=${text}`, '_blank');
+                }}
+                className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
               >
-                <Share2 size={14} />
-                Share My Recipe & Receipt Details
+                <MessageSquare size={16} /> Open on WhatsApp
               </button>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={resetBuilder}
-                  className="flex-1 py-3 bg-primary text-white text-xs font-bold uppercase rounded-full shadow-md hover:bg-[#6b3741] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                >
-                  Bake Another Custom Order
-                </button>
-                <button
-                  onClick={() => {
-                    const dashboard = document.getElementById('admin-dashboard');
-                    if (dashboard) {
-                      dashboard.classList.remove('hidden');
-                      dashboard.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                  className="flex-1 py-3 bg-[#fff8f5] text-primary border border-primary/20 text-xs font-bold uppercase rounded-full hover:bg-primary-container/10 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                >
-                  Inspect Live Order Queue
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={resetForm}
+                className="px-6 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
+              >
+                Book Another Cake
+              </button>
             </div>
           </div>
         ) : (
-          /* Two-Column Creator Grid */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+          /* 3-STEP BOOKING CARD */
+          <div className="max-w-5xl mx-auto bg-white rounded-3xl border border-primary/10 shadow-lg overflow-hidden">
             
-            {/* LEFT COLUMN: Controls & Selections (Col 7) */}
-            <div className="lg:col-span-7 bg-white/70 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-primary-container/40 flex flex-col min-h-[580px] shadow-sm">
-              
-              {/* Stepper Header Metrics */}
-              <div className="mb-6 flex justify-between items-center bg-[#fff8f5] p-3 rounded-2xl border border-primary/5">
-                <div>
-                  <span className="text-[10px] font-bold text-primary/80 uppercase tracking-widest block">
-                    STAGE {step} OF 14
-                  </span>
-                  <span className="font-display text-sm font-bold text-primary block mt-0.5">
-                    {
-                      [
-                        "Choose Dessert Style",
-                        "Portions & Physical Sizing",
-                        "Artisanal Sponge Flavor",
-                        "Frosting Outer Dress Color",
-                        "Dietary Preference",
-                        "Inner Layer Cake Filling",
-                        "Calibrated Sweetness Level",
-                        "Frosting Texture Coat",
-                        "Gourmet Crown Toppings",
-                        "Special Occasion Theme",
-                        "Frosting Letter Message",
-                        "Date Booking Slot",
-                        "Delivery Mode & Address",
-                        "Slab Recipe Overlook"
-                      ][step - 1]
-                    }
-                  </span>
-                </div>
-                <div className="w-14 h-1.5 bg-primary-container/20 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-primary rounded-full transition-all duration-500"
-                    style={{ width: `${(step / 14) * 100}%` }}
-                  />
-                </div>
+            {/* Step Progress Bar */}
+            <div className="bg-[#fff8f5] px-6 py-4 border-b border-primary/10 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {[
+                  { num: 1, title: 'Flavour & Size' },
+                  { num: 2, title: 'Choose Slot' },
+                  { num: 3, title: 'Order Details' }
+                ].map((s) => (
+                  <div key={s.num} className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
+                      step === s.num
+                        ? 'bg-primary text-white scale-110 shadow-xs'
+                        : step > s.num
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-zinc-200 text-zinc-500'
+                    }`}>
+                      {step > s.num ? <Check size={13} /> : s.num}
+                    </div>
+                    <span className={`text-xs font-bold hidden sm:inline ${
+                      step === s.num ? 'text-primary' : 'text-zinc-500'
+                    }`}>
+                      {s.title}
+                    </span>
+                    {s.num < 3 && <div className="w-6 h-[1px] bg-zinc-300 hidden sm:block mx-1" />}
+                  </div>
+                ))}
               </div>
 
-              {/* Dynamic STEP Option Bodies */}
-              <div className="flex-grow space-y-4">
-                
-                {/* STEP 1: Category Selection */}
-                {step === 1 && (
-                  <div className="space-y-4 animate-fadeIn">
-                    {/* Chat Analysis / Custom Preset Trigger */}
-                    <div className="bg-gradient-to-r from-pink-50 to-amber-50 border-2 border-pink-200 rounded-3xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xs mb-6">
-                      <div className="text-left space-y-1.5 flex-1">
-                        <span className="bg-pink-100 text-pink-700 text-[9px] font-black tracking-widest uppercase px-3 py-1 rounded-full inline-flex items-center gap-1 shadow-2xs select-none">
-                          <Sparkles className="w-3 h-3 fill-current" /> Chat Request Recipe Loaded
-                        </span>
-                        <h4 className="font-display text-base font-black text-[#5C2A31]">
-                          Manju Akka's Homemade Chocolate Drip Cake
-                        </h4>
-                        <p className="font-sans text-[11.5px] leading-relaxed text-slate-700">
-                          We analyzed your chat reference! This loads the exact recipe discussed: <strong>Egg-based, soft chocolate sponge, Belgian fudge layer filling, rich dark chocolate drip, cream rosettes, and "HAPPY BIRTHDAY APPA" placard. No premixes or preservatives!</strong>
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCustomization({
-                            category: 'cake',
-                            shape: 'Classic Round',
-                            size: '1kg Portion (approx. 8-12 servings)',
-                            baseFlavor: 'Chocolate Truffles',
-                            baseColor: '#2C1810',
-                            baseColorName: 'Chocolate Truffles',
-                            dietary: 'Standard Cream Base',
-                            fillings: 'Belgian Fudge',
-                            sweetness: 'Standard Sweetness',
-                            frostingType: 'Light Whipped Frosting',
-                            toppings: ['Chocolate Ganache Drip'],
-                            occasion: 'Birthday Celebration',
-                            messageOnCake: 'HAPPY BIRTHDAY APPA',
-                            deliveryDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-                            deliveryTimeSlot: 'Evening Twilight (06:00 PM - 09:00 PM)',
-                            specialInstructions: 'Manju Akka\'s Recipe: Prepared completely from scratch using flour, sugar, milk, fresh eggs, and high-fat cocoa powder. STRICTLY egg-based. ABSOLUTELY NO stabilizers, cake gels, premix, or artificial preservatives as discussed.'
-                          });
-                          setStep(14); // Jump directly to Review & Checkout
-                        }}
-                        className="px-5 py-3 bg-[#e0566d] hover:bg-[#c93b52] active:scale-95 text-white font-black text-xs uppercase tracking-wider rounded-2xl transition-all cursor-pointer whitespace-nowrap shadow-md hover:shadow-lg hover:translate-y-[-1px] select-none shrink-0"
-                      >
-                        Load Recipe Preset
-                      </button>
-                    </div>
+              {/* Total Price preview */}
+              <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-primary/15 shadow-xs">
+                <span className="text-[10px] text-zinc-500 uppercase font-bold">Estimated:</span>
+                <span className="font-mono font-black text-sm text-primary">₹{totalPrice}</span>
+              </div>
+            </div>
 
-                    <h3 className="font-display font-bold text-lg text-primary">Choose Your Desserts Base</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Choose from our whimsical range of sweet bakes, customized fresh to order.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-                      {[
-                        { id: 'cake', title: 'Fresh Cream Cake', desc: 'Beautiful custom layered frosting birthday & celebration mainstays from ₹500', icon: CakeIcon },
-                        { id: 'cupcake', title: 'Cupcake', desc: 'Cute single-serving whipped cream frosted delights from ₹80', icon: CakeIcon },
-                        { id: 'muffin', title: 'Muffin', desc: 'Warm local berry-studded soft morning bakes from ₹90', icon: Sparkles },
-                        { id: 'tres_leches', title: 'Tres Leches', desc: 'Rich, moisture layers of three milks soaked sponge cake from ₹350', icon: CakeIcon },
-                        { id: 'cookies', title: 'Cookies', desc: 'Crisp, premium hand-scooped chocolate chip bakery cookies from ₹60', icon: Cookie },
-                        { id: 'brownie', title: 'Fudgy Brownies', desc: 'Deep organic chocolate fudge squares drizzled with toppings from ₹350', icon: Cookie }
-                      ].map((cat) => {
-                        const IconComponent = cat.icon;
-                        return (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              setCustomization(prev => ({ ...prev, category: cat.id as any }));
-                              nextStep();
-                            }}
-                            className={`p-5 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
-                              customization.category === cat.id
-                                ? 'border-primary bg-primary-container/15 font-bold'
-                                : 'border-outline-variant bg-white/50'
-                            }`}
-                          >
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center p-2 text-primary shrink-0">
-                              <IconComponent className="w-5 h-5" />
-                            </div>
-                            <div>
-                              <h4 className="font-display font-bold text-sm text-primary">{cat.title}</h4>
-                              <span className="text-[10px] text-on-surface-variant leading-relaxed block mt-0.5">{cat.desc}</span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+            {/* Form Validation Alert */}
+            {validationError && (
+              <div className="m-6 p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 font-bold">
+                ⚠️ {validationError}
+              </div>
+            )}
+
+            {/* STEP 1: FLAVOUR & SIZE */}
+            {step === 1 && (
+              <div className="p-6 md:p-8 space-y-8 animate-fade-in text-left">
+                {/* Flavours Grid */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display font-bold text-base text-primary flex items-center gap-2">
+                      <Sparkles size={16} className="text-yellow-500" /> 1. Select Artisanal Flavour
+                    </h3>
+                    <span className="text-[11px] text-zinc-500 font-medium">Boutique small-batch recipes</span>
                   </div>
-                )}
 
-                {/* STEP 2: Shape Choice */}
-                {step === 2 && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <h3 className="font-display font-bold text-lg text-primary">Portion Shape Design</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Choose the geometric canvas for your custom hand-made bake.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                      {[
-                        { id: 'round', name: 'Classic Round', desc: 'Traditional elegant circle', element: <div className="w-5 h-5 rounded-full border-2 border-current" /> },
-                        { id: 'heart', name: 'Sweet Heart', desc: 'Perfect romantic choice', element: <Heart className="w-5 h-5 fill-current" /> },
-                        { id: 'square', name: 'Modern Square', desc: 'Bold contemporary finish', element: <div className="w-5 h-5 border-2 border-current rounded-xs" /> }
-                      ].map((sh) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                    {POPULAR_FLAVORS.map((flavor) => {
+                      const isSelected = selectedFlavor.name === flavor.name;
+                      return (
                         <button
-                          key={sh.name}
+                          key={flavor.name}
                           type="button"
-                          onClick={() => setCustomization(prev => ({ ...prev, shape: sh.name }))}
-                          className={`p-5 rounded-2xl border-2 text-left flex flex-col gap-3 transition-all cursor-pointer hover:scale-[1.02] ${
-                            customization.shape === sh.name
-                              ? 'border-primary bg-primary-container/15 font-bold text-primary shadow-[0_4px_12px_rgba(219,39,119,0.1)]'
-                              : 'border-outline-variant bg-white/50 text-neutral-600'
+                          onClick={() => setSelectedFlavor(flavor)}
+                          className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            isSelected
+                              ? 'bg-[#fff1ed] border-primary shadow-sm ring-1 ring-primary'
+                              : 'bg-white border-zinc-200 hover:border-primary/40 hover:bg-[#fffbf9]'
                           }`}
                         >
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            {sh.element}
-                          </div>
                           <div>
-                            <h4 className="font-display font-semibold text-sm text-primary">{sh.name}</h4>
-                            <span className="text-[10px] text-on-surface-variant leading-tight block mt-1">{sh.desc}</span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 3: Size Choice with Prices */}
-                {step === 3 && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <h3 className="font-display font-bold text-lg text-primary">Physical Sizing & Serving Yield</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Calibrate the portion size to fit your guest list perfectly. Price adjusts automatically!
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 pt-2">
-                      {(() => {
-                        const getAvailableSizes = () => {
-                          if (customization.category === 'cake') {
-                            return [
-                              { name: '500g Portion (approx. 4-6 servings)', desc: 'Base Price × 0.6 multiplier', priceLabel: '0.6x base' },
-                              { name: '1kg Portion (approx. 8-12 servings)', desc: 'Standard weight - Base Price × 1.0', priceLabel: '1.0x base' },
-                              { name: '2kg Portion (approx. 16-20 servings)', desc: 'Large celebration - Base Price × 1.8', priceLabel: '1.8x base' }
-                            ];
-                          } else if (customization.category === 'brownie') {
-                            return [
-                              { name: '600g Slab (Box of 6-9 pieces)', desc: 'Freshly baked organic chocolate brownie slab', priceLabel: '₹750' }
-                            ];
-                          } else if (customization.category === 'cupcake' || customization.category === 'muffin' || customization.category === 'cookies') {
-                            return [
-                              { name: 'Single Portion', desc: 'Just a single fresh bake', priceLabel: '1x base' },
-                              { name: 'Box of 6 Pack', desc: 'Sweet savings - 6x base price', priceLabel: '6x base' },
-                              { name: 'Box of 12 Party', desc: 'Grand pack - 11x base price (1 free!)', priceLabel: '11x base' }
-                            ];
-                          } else if (customization.category === 'tres_leches') {
-                            return [
-                              { name: 'Single Cup serving', desc: 'Moist and delicious single portion', priceLabel: '1x base' },
-                              { name: 'Medium Tub (0.5kg)', desc: 'Perfect sharing tub - 2x base price', priceLabel: '2x base' },
-                              { name: 'Party Bowl (1kg)', desc: 'Grand feast bowl - 3.5x base price', priceLabel: '3.5x base' }
-                            ];
-                          }
-                          return [
-                            { name: 'Standard Portion', desc: 'Standard single piece serving', priceLabel: '1.0x base' }
-                          ];
-                        };
-                        return getAvailableSizes().map((sizeItem) => {
-                          const isSelected = customization.size === sizeItem.name;
-                          return (
-                            <button
-                              key={sizeItem.name}
-                              type="button"
-                              onClick={() => {
-                                setCustomization(prev => ({ ...prev, size: sizeItem.name }));
-                              }}
-                              className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
-                                isSelected
-                                  ? 'border-primary bg-primary-container/15 font-bold'
-                                  : 'border-outline-variant/55 bg-white/50'
-                              }`}
-                            >
-                              <div>
-                                <span className="font-display text-xs text-primary block">{sizeItem.name}</span>
-                                <span className="text-[10px] text-on-surface-variant font-normal block">{sizeItem.desc}</span>
-                              </div>
-                              <span className="text-xs text-pink-500 font-bold">
-                                {sizeItem.priceLabel}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span 
+                                className="w-4 h-4 rounded-full border border-black/10 shrink-0" 
+                                style={{ backgroundColor: flavor.color }}
+                              />
+                              <span className="font-display font-bold text-xs text-primary leading-tight">
+                                {flavor.name}
                               </span>
-                            </button>
-                          );
-                        });
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 4: FLAVOUR Selection with groups */}
-                {step === 4 && (
-                  <div className="space-y-4 animate-fadeIn">
-                    <h3 className="font-display font-bold text-lg text-primary">Select Custom Flavour</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Each recipe is hand-whipped fresh by standard premium menu criteria.
-                    </p>
-
-                    <div className="space-y-6 max-h-[320px] overflow-y-auto pr-1">
-                      {Object.keys(FLAVOUR_GROUPS)
-                        .filter(groupName => {
-                          if (customization.category === 'cake') {
-                            return ['EVERYDAY CLASSICS', 'PREMIUM FAVOURITES', 'CHOCOLATE & FUSION', 'CELEBRATION SPECIALS'].includes(groupName);
-                          } else if (customization.category === 'brownie') {
-                            return groupName === 'BROWNIES';
-                          } else if (customization.category === 'cupcake') {
-                            return groupName === 'CUPCAKES';
-                          } else if (customization.category === 'muffin') {
-                            return groupName === 'MUFFINS';
-                          } else if (customization.category === 'tres_leches') {
-                            return groupName === 'TRES LECHES';
-                          } else if (customization.category === 'cookies') {
-                            return groupName === 'COOKIES';
-                          }
-                          return true;
-                        })
-                        .map(groupName => (
-                          <div key={groupName} className="space-y-2">
-                            <h4 className="text-[10px] font-bold tracking-wider text-primary/70 uppercase">
-                              {groupName}
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {FLAVOUR_GROUPS[groupName].map(flav => {
-                                const isSelected = customization.baseFlavor === flav.name;
-                                return (
-                                  <button
-                                    key={flav.name}
-                                    type="button"
-                                    onClick={() => {
-                                      setCustomization(prev => ({
-                                        ...prev,
-                                        baseFlavor: flav.name,
-                                        baseColor: flav.color,
-                                        baseColorName: flav.name
-                                      }));
-                                    }}
-                                    className={`p-3 rounded-xl border-2 text-left flex items-center justify-between gap-3 transition-all cursor-pointer ${
-                                      isSelected
-                                        ? 'border-yellow-400 bg-amber-50/40 shadow-[0_0_12px_rgba(250,204,21,0.4)] scale-[1.01]'
-                                        : 'border-outline-variant/50 bg-white/50 hover:bg-neutral-50/50'
-                                    }`}
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="w-4 h-4 rounded-full border border-primary/10 shadow-inner shrink-0" style={{ backgroundColor: flav.color }} />
-                                      <span className="font-display text-xs font-bold text-slate-800">
-                                        {flav.name}
-                                      </span>
-                                    </div>
-                                    <span className="text-xs font-bold text-pink-500 shrink-0">
-                                      ₹{flav.price}
-                                    </span>
-                                  </button>
-                                );
-                              })}
                             </div>
+                            <p className="text-[11px] text-zinc-500 leading-snug line-clamp-2">
+                              {flavor.desc}
+                            </p>
                           </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 5: Dietary */}
-                {step === 5 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Dietary Adaptations</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      We offer fully isolated sanitary workstations for special baker requests (eggless sponge, zero gluten flour blends).
-                    </p>
-                    <div className="grid grid-cols-1 gap-2.5 pt-1">
-                      {options.dietary.map((diet) => (
-                        <button
-                          key={diet.id}
-                          onClick={() => setCustomization({ ...customization, dietary: diet.name })}
-                          className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
-                            customization.dietary === diet.name
-                              ? 'border-primary bg-primary-container/15'
-                              : 'border-outline-variant/50 bg-white/50'
-                          }`}
-                        >
-                          <div>
-                            <span className="font-display text-xs font-bold text-primary block">{diet.name}</span>
-                            {diet.description && (
-                              <span className="text-[10px] text-on-surface-variant block">{diet.description}</span>
-                            )}
-                          </div>
-                          <span className="text-xs text-primary font-bold">
-                            {diet.price === 0 ? '₹0' : `+₹${diet.price}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 6: Layer Filings */}
-                {step === 6 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Interior Core Sponge Layer Filling</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Gourmet premium fillings stuffed cleanly between sponge cake bread decks.
-                    </p>
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      {options.fillings.map((fil) => (
-                        <button
-                          key={fil.id}
-                          onClick={() => setCustomization({ ...customization, fillings: fil.name })}
-                          className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all cursor-pointer ${
-                            customization.fillings === fil.name
-                              ? 'border-primary bg-primary-container/15 font-bold'
-                              : 'border-outline-variant/40 bg-white/40'
-                          }`}
-                        >
-                          <span className="font-display text-xs text-primary">{fil.name}</span>
-                          <span className="text-[10px] text-on-surface-variant font-semibold">
-                            {fil.price === 0 ? '₹0' : `+₹${fil.price}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 7: Sweetness Level */}
-                {step === 7 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Calibrated Sweetness Level</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Choose how much sugar or stevia sweet index to apply.
-                    </p>
-                    <div className="grid grid-cols-1 gap-3 pt-2">
-                      {options.sweetness.map((swt) => (
-                        <button
-                          key={swt.id}
-                          onClick={() => setCustomization({ ...customization, sweetness: swt.name })}
-                          className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                            customization.sweetness === swt.name
-                              ? 'border-primary bg-primary-container/15'
-                              : 'border-outline-variant/50 bg-white/50'
-                          }`}
-                        >
-                          <div className="flex justify-between items-center w-full">
-                            <div>
-                              <span className="font-display text-xs font-bold text-primary block">{swt.name}</span>
-                              {swt.description && (
-                                <span className="text-[10px] text-on-surface-variant block">{swt.description}</span>
-                              )}
-                            </div>
-                            {swt.price > 0 && (
-                              <span className="text-xs font-bold text-primary shrink-0 ml-2">
-                                +₹{swt.price}
-                              </span>
-                            )}
+                          <div className="mt-3 pt-2 border-t border-zinc-100 flex items-center justify-between">
+                            <span className="text-[9px] uppercase font-bold text-zinc-400">Base</span>
+                            <span className="font-mono text-xs font-black text-primary">₹{flavor.price}</span>
                           </div>
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
-                )}
+                </div>
 
-                {/* STEP 8: Frosting type */}
-                {step === 8 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Outer Body Frosting Texture coat</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Swiss buttercreams provide heavy piping options while whipped cream is fluffy and feather-light.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {options.frostings.map((fs) => (
-                        <button
-                          key={fs.id}
-                          onClick={() => setCustomization({ ...customization, frostingType: fs.name })}
-                          className={`p-4 rounded-2xl border-2 text-left flex flex-col justify-between transition-all cursor-pointer ${
-                            customization.frostingType === fs.name
-                              ? 'border-primary bg-primary-container/15'
-                              : 'border-outline-variant/40 bg-white/40'
-                          }`}
-                        >
-                          <div>
-                            <span className="font-display text-xs font-bold text-primary block">{fs.name}</span>
-                            {fs.description && (
-                              <span className="text-[10px] text-on-surface-variant block">{fs.description}</span>
-                            )}
-                          </div>
-                          <span className="text-xs text-primary font-bold mt-2 block">
-                            {fs.price === 0 ? '₹0' : `+₹${fs.price}`}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 9: Toppings */}
-                {step === 9 && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="font-display font-bold text-lg text-primary">Gourmet Toppings (Multi-Select)</h3>
-                      <span className="text-[10px] bg-primary/10 text-primary uppercase p-1 px-2.5 rounded-full font-bold">
-                        Add Multiple
-                      </span>
-                    </div>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Decorate the top and side panels! Watch stars, berries, and butterflies appear on the live review cake.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      {options.toppings.map((top) => {
-                        const isChosen = customization.toppings.includes(top.name);
+                {/* Sizing & Dietary Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                  {/* Size Selector */}
+                  <div className="space-y-3">
+                    <h4 className="font-display font-bold text-xs uppercase tracking-wider text-primary">
+                      2. Choose Size & Portions
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      {SIZES.map((size) => {
+                        const isSelected = selectedSize.name === size.name;
                         return (
                           <button
-                            key={top.id}
-                            onClick={() => handleToppingToggle(top.name)}
-                            className={`p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all cursor-pointer ${
-                              isChosen
-                                ? 'border-primary bg-primary-container/15 font-bold'
-                                : 'border-outline-variant/40 bg-white/40'
+                            key={size.name}
+                            type="button"
+                            onClick={() => setSelectedSize(size)}
+                            className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                              isSelected
+                                ? 'bg-primary text-white border-primary shadow-xs'
+                                : 'bg-[#fff8f5] text-zinc-700 border-zinc-200 hover:border-primary/40'
                             }`}
                           >
-                            <span className="font-display text-xs text-primary">{top.name}</span>
-                            <span className="text-[10px] text-on-surface-variant font-bold">
-                              {top.price === 0 ? '₹0' : `+₹${top.price}`}
+                            <span className="font-bold text-xs block leading-tight">{size.name}</span>
+                            <span className={`text-[10px] block mt-0.5 ${isSelected ? 'text-white/80' : 'text-zinc-500'}`}>
+                              {size.desc}
                             </span>
                           </button>
                         );
                       })}
                     </div>
                   </div>
-                )}
 
-                {/* STEP 10: Occasion */}
-                {step === 10 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Special Occasion Theme</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      This helps our kitchen team select custom box ribbons and visual design matches.
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                      {[
-                        "Birthday Celebration",
-                        "Anniversary Milestone",
-                        "Grand Wedding Reception",
-                        "Baby Shower Welcome",
-                        "Sweet Graduation Party",
-                        "Just Because / Sweet Tooth"
-                      ].map((occ) => (
-                        <button
-                          key={occ}
-                          onClick={() => setCustomization({ ...customization, occasion: occ })}
-                          className={`p-4 rounded-2xl border-2 text-center text-xs font-semibold flex items-center justify-center min-h-[70px] transition-all cursor-pointer ${
-                            customization.occasion === occ
-                              ? 'border-primary bg-primary-container/20 text-primary font-bold scale-[1.03]'
-                              : 'border-outline-variant/40 bg-white/30 text-on-surface'
-                          }`}
-                        >
-                          {occ}
-                        </button>
-                      ))}
+                  {/* Dietary Preference */}
+                  <div className="space-y-3">
+                    <h4 className="font-display font-bold text-xs uppercase tracking-wider text-primary">
+                      3. Dietary Preference
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsEggless(false)}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          !isEggless
+                            ? 'bg-primary text-white border-primary shadow-xs'
+                            : 'bg-[#fff8f5] text-zinc-700 border-zinc-200 hover:border-primary/40'
+                        }`}
+                      >
+                        <span className="font-bold text-xs block leading-tight">Standard Dairy Base</span>
+                        <span className={`text-[10px] block mt-0.5 ${!isEggless ? 'text-white/80' : 'text-zinc-500'}`}>
+                          Fresh farm eggs & butter
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsEggless(true)}
+                        className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                          isEggless
+                            ? 'bg-emerald-700 text-white border-emerald-700 shadow-xs'
+                            : 'bg-[#fff8f5] text-zinc-700 border-zinc-200 hover:border-emerald-500'
+                        }`}
+                      >
+                        <span className="font-bold text-xs block leading-tight">100% Pure Eggless</span>
+                        <span className={`text-[10px] block mt-0.5 ${isEggless ? 'text-white/80' : 'text-zinc-500'}`}>
+                          Pure vegetarian sponge (+₹50)
+                        </span>
+                      </button>
                     </div>
                   </div>
-                )}
+                </div>
 
-                {/* STEP 11: Personal message */}
-                {step === 11 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Letter Message On Sponge Cake</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      We'll hand-pipe this cleanly on top of the cake. Watch it appear on the live preview cylinder!
-                    </p>
-                    <div className="pt-2">
-                      <label className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-2">
-                        Piped Text (Max 30 Characters)
-                      </label>
+                {/* Step 1 Actions */}
+                <div className="pt-4 border-t border-zinc-100 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="px-6 py-2.5 bg-primary hover:bg-[#6b3741] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    Select Baking Slot <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: RESERVE CAKE SLOT */}
+            {step === 2 && (
+              <div className="p-6 md:p-8 space-y-6 animate-fade-in text-left">
+                <div className="border-b border-[#d6c2c3]/30 pb-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                    Limited Daily Capacity
+                  </span>
+                  <h3 className="font-display font-bold text-lg text-primary mt-2">
+                    Select Your Fresh Baking Slot
+                  </h3>
+                  <p className="font-sans text-xs text-zinc-600 mt-1">
+                    To maintain strict artisanal freshness and hygiene, we bake in small batches. Choose an available slot:
+                  </p>
+                </div>
+
+                {/* Available Slots List */}
+                <div className="space-y-3">
+                  <h4 className="font-display text-xs font-black uppercase tracking-wider text-primary">
+                    Active Scheduled Baking Slots
+                  </h4>
+
+                  {cakeSlots.length === 0 ? (
+                    <div className="p-6 bg-zinc-50 rounded-2xl border border-zinc-200 text-center text-xs text-zinc-500">
+                      No batch slots scheduled for this week. You can enter a custom date and time below!
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      {cakeSlots.map((slot) => {
+                        const remaining = Math.max(0, slot.maxCapacity - slot.bookedCount);
+                        const isFull = remaining === 0;
+                        const isSelected = selectedSlotId === slot.id;
+
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            disabled={!slot.isActive || isFull}
+                            onClick={() => setSelectedSlotId(slot.id)}
+                            className={`p-4 rounded-2xl border text-left transition-all cursor-pointer relative ${
+                              isSelected
+                                ? 'bg-[#fff1ed] border-primary ring-2 ring-primary shadow-md'
+                                : !slot.isActive || isFull
+                                ? 'bg-zinc-50 border-zinc-200 opacity-50 cursor-not-allowed'
+                                : 'bg-white border-zinc-200 hover:border-primary/50 hover:bg-[#fffcfb]'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="font-display font-bold text-xs text-primary block">
+                                  {slot.title}
+                                </span>
+                                <div className="flex items-center gap-2 mt-1 font-mono text-[11px] text-zinc-600">
+                                  <span>📅 {slot.date}</span>
+                                  <span>⏰ {slot.timeWindow}</span>
+                                </div>
+                                {slot.notes && (
+                                  <p className="text-[10px] text-zinc-500 mt-1.5 font-sans">
+                                    {slot.notes}
+                                  </p>
+                                )}
+                              </div>
+
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                                isFull
+                                  ? 'bg-rose-100 text-rose-800'
+                                  : remaining <= 2
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-emerald-100 text-emerald-800'
+                              }`}>
+                                {isFull ? 'Sold Out' : `${remaining} left`}
+                              </span>
+                            </div>
+
+                            {isSelected && (
+                              <div className="mt-2.5 pt-2 border-t border-primary/20 flex items-center gap-1 text-[10px] font-bold text-primary">
+                                <Check size={12} /> Selected Slot
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Custom Slot / Date Option */}
+                <div className="pt-4 border-t border-zinc-100 space-y-3">
+                  <h4 className="font-display text-xs font-bold uppercase tracking-wider text-zinc-600">
+                    Need a Different Date / Time?
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-zinc-500 block">Preferred Date</label>
+                      <input 
+                        type="date"
+                        value={customDate}
+                        onChange={(e) => {
+                          setCustomDate(e.target.value);
+                          setSelectedSlotId(''); // Deselect slot to use custom
+                        }}
+                        className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3 py-2 text-xs font-mono font-medium focus:outline-primary"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-zinc-500 block">Preferred Time Slot</label>
                       <input 
                         type="text"
-                        value={customization.messageOnCake}
-                        onChange={(e) => setCustomization({ ...customization, messageOnCake: e.target.value.slice(0, 30) })}
-                        placeholder="Happy Birthday Sarah!"
-                        className="w-full p-4 rounded-xl border border-primary/20 bg-white/70 text-on-surface font-semibold placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                        value={customTime}
+                        onChange={(e) => {
+                          setCustomTime(e.target.value);
+                          setSelectedSlotId('');
+                        }}
+                        placeholder="e.g. 11:00 AM - 01:00 PM"
+                        className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3 py-2 text-xs font-medium focus:outline-primary"
                       />
                     </div>
                   </div>
-                )}
-
-                {/* STEP 12: Delivery Date & Slot */}
-                {step === 12 && (
-                  <div className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Delivery Date & Precise Time Slot</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Cakes are baked 3 hours prior to dispatch to preserve exquisite flavor. Minimum 24 hour booking is recommended.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-2">
-                          Select Delivery Date
-                        </label>
-                        <div className="relative">
-                          <input 
-                            type="date"
-                            value={customization.deliveryDate}
-                            onChange={(e) => setCustomization({ ...customization, deliveryDate: e.target.value })}
-                            className="w-full p-3 border border-primary/10 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-primary text-xs font-semibold"
-                            min={new Date().toISOString().split('T')[0]}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-primary uppercase tracking-wider block mb-2">
-                          Select Time Session Slot
-                        </label>
-                        <select
-                          value={customization.deliveryTimeSlot}
-                          onChange={(e) => setCustomization({ ...customization, deliveryTimeSlot: e.target.value })}
-                          className="w-full p-3 border border-primary/10 rounded-xl bg-white focus:outline-none focus:ring-1 focus:ring-primary text-xs font-semibold"
-                        >
-                          <option>Morning Breakfast (09:00 AM - 12:00 PM)</option>
-                          <option>Hi-Noon Lunch (12:00 PM - 03:00 PM)</option>
-                          <option>High Tea Evening (03:00 PM - 06:00 PM)</option>
-                          <option>Evening Twilight (06:00 PM - 09:00 PM)</option>
-                          <option>Midnight Birthday Surprise (09:00 PM - 11:59 PM) (+₹150)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* STEP 13: Delivery Mode & Customer Details */}
-                {step === 13 && (
-                  <form className="space-y-4">
-                    <h3 className="font-display font-bold text-lg text-primary">Client Details & Dispatch Mode</h3>
-                    <p className="font-sans text-xs text-on-surface-variant">
-                      Please enter delivery details to finalize pricing.
-                    </p>
-                    
-                    {/* Toggle Pickup vs Delivery */}
-                    <div className="grid grid-cols-2 gap-3 pb-2">
-                      <button
-                        type="button"
-                        onClick={() => setCustomer({ ...customer, deliveryType: 'pickup' })}
-                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          customer.deliveryType === 'pickup'
-                            ? 'bg-primary text-white border-primary shadow-sm'
-                            : 'bg-white text-on-surface border-[#d6c2c3]/60 hover:bg-neutral-50'
-                        }`}
-                      >
-                        <Store size={15} />
-                        Self-Pickup from Studio (Free)
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setCustomer({ ...customer, deliveryType: 'delivery' })}
-                        className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer ${
-                          customer.deliveryType === 'delivery'
-                            ? 'bg-primary text-white border-primary shadow-sm'
-                            : 'bg-white text-on-surface border-[#d6c2c3]/60 hover:bg-neutral-50'
-                        }`}
-                      >
-                        <Truck size={15} />
-                        Home Delivery (+₹80)
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                      <div className="space-y-1">
-                        <label className="font-bold text-[#874e58] uppercase text-[10px]">Your Name</label>
-                        <input 
-                          type="text"
-                          required
-                          value={customer.name}
-                          onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="Rahul Sharma"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-[#874e58] uppercase text-[10px]">Email Address</label>
-                        <input 
-                          type="email"
-                          required
-                          value={customer.email}
-                          onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="rahul@example.com"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-[#874e58] uppercase text-[10px]">Phone Number</label>
-                        <input 
-                          type="tel"
-                          required
-                          value={customer.phone}
-                          onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="98656 21880"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="font-bold text-[#874e58] uppercase text-[10px]">Special Custom Demands</label>
-                        <textarea 
-                          rows={1}
-                          value={customization.specialInstructions}
-                          onChange={(e) => setCustomization({ ...customization, specialInstructions: e.target.value })}
-                          className="w-full p-2 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="Please pack strawberries on side..."
-                        />
-                      </div>
-                    </div>
-
-                    {customer.deliveryType === 'delivery' && (
-                      <div className="space-y-1 text-xs text-left">
-                        <label className="font-bold text-[#874e58] uppercase text-[10px]">Home Street Address Location</label>
-                        <input 
-                          type="text"
-                          required
-                          value={customer.address}
-                          onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
-                          className="w-full p-2.5 rounded-xl border-2 border-outline-variant/40 bg-white"
-                          placeholder="Apt-402, Signature Residency, Connaught Place, New Delhi"
-                        />
-                      </div>
-                    )}
-                  </form>
-                )}
-
-                {/* STEP 14: Final Invoice Review */}
-                {step === 14 && (
-                  <div className="space-y-4 text-xs font-sans text-left">
-                    <h3 className="font-display font-bold text-lg text-primary text-center">Verify Selected Slab Recipe</h3>
-                    <p className="font-sans text-[11px] text-on-surface-variant text-center">
-                      Review your summary instructions before submitting baking request to kitchen.
-                    </p>
-
-                    <div className="bg-white/90 p-4 rounded-2xl border border-primary/10 max-h-[250px] overflow-y-auto space-y-2 divide-y divide-[#ffade]/20">
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Selected Base:</span> <span className="font-bold uppercase">{customization.category}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Size Scale:</span> <span className="font-bold">{customization.size}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Baked Sponge Flavor:</span> <span className="font-bold">{customization.baseFlavor}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Frosting Style Color:</span> <span className="font-bold">{customization.baseColorName}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Dietary Adjustment:</span> <span className="font-bold">{customization.dietary}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Sponge Core Filling:</span> <span className="font-bold">{customization.fillings}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Sweet Index Level:</span> <span className="font-bold">{customization.sweetness}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Icing Surface Coat:</span> <span className="font-bold">{customization.frostingType}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Toppings loaded:</span> <span className="font-bold max-w-[170px] truncate block text-right">{customization.toppings.join(', ')}</span></div>
-                      <div className="flex justify-between py-1 text-pink-700 italic"><span className="text-on-surface-variant font-semibold">Frosting Message:</span> <span className="font-bold">"{customization.messageOnCake || 'None'}"</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">Occasion Intended:</span> <span className="font-bold">{customization.occasion}</span></div>
-                      <div className="flex justify-between py-1 text-secondary"><span className="text-on-surface-variant">Dispatch:</span> <span className="font-bold uppercase">{customer.deliveryType}</span></div>
-                      <div className="flex justify-between py-1"><span className="text-on-surface-variant">DateTime Schedule:</span> <span className="font-bold text-slate-800">{customization.deliveryDate} @ {customization.deliveryTimeSlot.slice(0, 15)}</span></div>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Validation errors */}
-              {validationError && (
-                <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-xl flex items-center gap-2 text-xs font-semibold animate-pulse border border-red-200">
-                  <HelpCircle size={15} />
-                  {validationError}
                 </div>
-              )}
 
-              {/* Control Panel Nav Buttons */}
-              <div className="mt-8 pt-4 border-t border-[#d6c2c3]/50 flex justify-between items-center bg-white/40 p-2 rounded-2xl">
-                <button
-                  onClick={prevStep}
-                  disabled={step === 1}
-                  className="px-5 py-2.5 rounded-full text-xs font-bold border border-outline-variant/60 text-on-surface-variant hover:bg-[#ffeade]/30 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer flex items-center gap-1 transition-all"
-                  id="btn-prev"
-                >
-                  <ChevronLeft size={14} />
-                  Prev
-                </button>
+                {/* Step 2 Actions */}
+                <div className="pt-4 border-t border-zinc-100 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="px-5 py-2.5 text-zinc-600 hover:text-zinc-900 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft size={14} /> Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="px-6 py-2.5 bg-primary hover:bg-[#6b3741] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    Add Message & Details <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            )}
 
-                {step < 14 ? (
-                  <button
-                    onClick={nextStep}
-                    className="px-6 py-2.5 bg-primary text-white font-bold text-xs uppercase tracking-wider rounded-full shadow-md hover:bg-[#6b3741] active:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1"
-                    id="btn-next"
-                  >
-                    Next Step
-                    <ChevronRight size={14} />
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleSubmitOrder}
-                    className="px-8 py-3 bg-primary text-white font-bold text-sm tracking-wider uppercase rounded-full shadow-lg hover:bg-[#6b3741] animate-pulse transition-all cursor-pointer flex items-center gap-1"
-                    id="btn-checkout"
-                  >
-                    <ShoppingBag size={16} />
-                    Submit Custom Recipe Request
-                  </button>
+            {/* STEP 3: MESSAGE & CHECKOUT */}
+            {step === 3 && (
+              <form onSubmit={handleConfirmOrder} className="p-6 md:p-8 space-y-6 animate-fade-in text-left">
+                <div className="border-b border-[#d6c2c3]/30 pb-4">
+                  <h3 className="font-display font-bold text-lg text-primary">
+                    Message On Cake & Contact Details
+                  </h3>
+                  <p className="font-sans text-xs text-zinc-600 mt-1">
+                    Almost there! Provide your name, contact phone, and custom message to seal your fresh cake slot.
+                  </p>
+                </div>
+
+                {/* Message on Cake */}
+                <div className="space-y-1.5">
+                  <label className="text-[10.5px] font-bold uppercase text-zinc-600 block">
+                    Custom Message on Cake <span className="text-zinc-400 font-normal">(Free custom chocolate plaque)</span>
+                  </label>
+                  <input 
+                    type="text"
+                    maxLength={35}
+                    value={messageOnCake}
+                    onChange={(e) => setMessageOnCake(e.target.value)}
+                    placeholder="e.g. Happy Birthday Appa! or Happy Anniversary"
+                    className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-primary"
+                  />
+                  <span className="text-[10px] text-zinc-400 block font-mono">
+                    {35 - messageOnCake.length} characters remaining
+                  </span>
+                </div>
+
+                {/* Customer Details Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-zinc-600 block">Your Name *</label>
+                    <input 
+                      type="text"
+                      required
+                      value={customer.name}
+                      onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
+                      placeholder="e.g. Priyanjali Sen"
+                      className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold uppercase text-zinc-600 block">Phone / WhatsApp Number *</label>
+                    <input 
+                      type="tel"
+                      required
+                      value={customer.phone}
+                      onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
+                      placeholder="e.g. 9865621880"
+                      className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Pickup or Delivery */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold uppercase text-zinc-600 block">Fulfillment Method</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCustomer({ ...customer, deliveryType: 'pickup' })}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                        customer.deliveryType === 'pickup'
+                          ? 'bg-primary text-white border-primary shadow-xs'
+                          : 'bg-[#fff8f5] text-zinc-700 border-zinc-200'
+                      }`}
+                    >
+                      <Store size={16} />
+                      <div>
+                        <span className="font-bold text-xs block leading-tight">Self Pickup</span>
+                        <span className="text-[10px] opacity-80">Free direct from kitchen</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setCustomer({ ...customer, deliveryType: 'delivery' })}
+                      className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 ${
+                        customer.deliveryType === 'delivery'
+                          ? 'bg-primary text-white border-primary shadow-xs'
+                          : 'bg-[#fff8f5] text-zinc-700 border-zinc-200'
+                      }`}
+                    >
+                      <Truck size={16} />
+                      <div>
+                        <span className="font-bold text-xs block leading-tight">Doorstep Delivery</span>
+                        <span className="text-[10px] opacity-80">+₹80 city delivery</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {customer.deliveryType === 'delivery' && (
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="text-[10px] font-bold uppercase text-zinc-600 block">Delivery Address *</label>
+                    <textarea 
+                      rows={2}
+                      required
+                      value={customer.address}
+                      onChange={(e) => setCustomer({ ...customer, address: e.target.value })}
+                      placeholder="House/Flat No., Street, Landmark, Area..."
+                      className="w-full bg-[#fff8f5] border border-zinc-200 rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-primary resize-none"
+                    />
+                  </div>
                 )}
-              </div>
 
-            </div>
+                {/* Final Order Summary Bar */}
+                <div className="p-4 bg-[#fff8f5] rounded-2xl border border-primary/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                  <div>
+                    <span className="font-bold text-primary block font-display text-sm">
+                      {selectedFlavor.name} ({selectedSize.name})
+                    </span>
+                    <span className="text-zinc-500 font-mono text-[11px]">
+                      Slot: {activeSlot ? `${activeSlot.date} @ ${activeSlot.timeWindow}` : `${customDate} @ ${customTime}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-zinc-400 uppercase text-[10px] font-bold">Total:</span>
+                    <span className="font-mono text-lg font-black text-primary">₹{totalPrice}</span>
+                  </div>
+                </div>
 
-            {/* RIGHT COLUMN: Live Interactive Aesthetic Preview (Col 5) */}
-            <div className="lg:col-span-5 bg-gradient-to-tr from-white to-[#fff8f5] border border-primary-container/40 rounded-3xl p-6 flex flex-col items-center justify-between min-h-[580px] shadow-pink relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary-container/20 filter blur-xl rounded-full" />
-              
-              <div className="text-center">
-                <span className="p-1 px-3 bg-[#e9c400]/10 text-amber-700 text-[10px] font-bold rounded-full tracking-wider uppercase inline-block">
-                  Aesthetic Preview Layer
-                </span>
-                <h3 className="font-display text-sm font-bold text-primary mt-1">
-                  Active Confection Configuration
-                </h3>
-              </div>
+                {/* Two Checkout Buttons: Instant WhatsApp & Direct Online Booking */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={handlePrevStep}
+                    className="px-5 py-3 text-zinc-600 hover:text-zinc-900 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer sm:w-auto"
+                  >
+                    <ArrowLeft size={14} /> Back
+                  </button>
 
-              {/* The Visual Cake Stack Object */}
-              <div className="relative w-64 h-64 flex items-center justify-center animate-float">
-                {/* Visual shadow glow */}
-                <div className="w-52 h-6 bg-primary/10 rounded-full blur-md absolute bottom-2 pointer-events-none" />
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppOrder}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <MessageSquare size={16} /> Instant Order on WhatsApp
+                  </button>
 
-                <Cake3DPreview customization={customization} />
-              </div>
-
-              {/* Computed live invoice ticker badge pricing */}
-              <div className="w-full bg-[#ffeade]/60 hover:bg-[#ffeade]/80 rounded-2xl p-4 border border-primary/5 text-center mt-4 transition-all" id="estimated-total-container">
-                <span className="text-[10px] text-[#847375] font-extrabold uppercase tracking-widest block">
-                  Estimated Total
-                </span>
-                <span className="font-display text-2xl font-black text-primary block mt-1 hover:scale-105 transition-transform duration-205">
-                  ₹{calculatePrice()}
-                </span>
-                <span className="text-[9px] text-[#847375] font-semibold block uppercase">
-                  (Includes taxes, FSSAI certified slab slot)
-                </span>
-              </div>
-
-              {/* Share my creation button */}
-              <button
-                type="button"
-                onClick={() => handleShareCreation()}
-                className="w-full mt-3 py-2.5 bg-[#e0566d] hover:bg-[#c93b52] active:scale-95 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 shadow-xs"
-              >
-                <Share2 size={13} />
-                Share My Custom Design
-              </button>
-
-            </div>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-primary hover:bg-[#6b3741] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  >
+                    <Check size={16} /> Confirm Online Slot
+                  </button>
+                </div>
+              </form>
+            )}
 
           </div>
         )}
 
-        {/* Share Modal Dialog */}
-        {showShareOptions && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-[4px] z-50 flex items-center justify-center p-4 animate-fadeIn">
-            <div className="bg-white rounded-3xl p-6 max-w-md w-full border border-primary-container shadow-xl space-y-4 text-left relative overflow-hidden">
-              <div className="flex justify-between items-center border-b border-[#d6c2c3]/20 pb-3">
-                <h3 className="font-display text-base font-black text-[#5C2A31] flex items-center gap-2">
-                  <Share2 className="w-5 h-5 text-primary" />
-                  Share Your Sweet Design
-                </h3>
-                <button 
-                  onClick={() => setShowShareOptions(false)}
-                  className="text-slate-400 hover:text-slate-600 font-bold font-sans text-lg focus:outline-none cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <p className="font-sans text-[11px] leading-relaxed text-slate-600">
-                Select one of the channels below to instantly share a summary of your beautifully designed customized confection with family, friends, or for orders!
-              </p>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase text-[#874e58] tracking-widest block font-sans">
-                  Confection Design Summary
-                </label>
-                <textarea
-                  readOnly
-                  rows={6}
-                  className="w-full p-2.5 bg-[#fff8f5] border border-[#d6c2c3]/40 rounded-xl font-mono text-[10.5px] leading-relaxed text-slate-700 focus:outline-none"
-                  value={getShareSummaryText(submittedOrder || undefined)}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(getShareSummaryText(submittedOrder || undefined))}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <MessageSquare size={12} />
-                  WhatsApp
-                </a>
-
-                <a
-                  href={`mailto:?subject=${encodeURIComponent("Check out my custom cake design!")}&body=${encodeURIComponent(getShareSummaryText(submittedOrder || undefined))}`}
-                  className="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Mail size={12} />
-                  Email
-                </a>
-
-                <button
-                  type="button"
-                  onClick={() => handleCopyShareText(submittedOrder || undefined)}
-                  className="py-2.5 px-3 bg-primary hover:bg-[#6b3741] active:scale-95 text-white font-bold text-[11px] uppercase tracking-wider rounded-xl text-center transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <Copy size={12} />
-                  {shareCopied ? "Copied!" : "Copy Text"}
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowShareOptions(false)}
-                className="w-full py-2.5 bg-neutral-100 hover:bg-neutral-200 text-slate-700 font-bold text-xs uppercase tracking-wider rounded-xl text-center transition-all cursor-pointer"
-              >
-                Close Panel
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );

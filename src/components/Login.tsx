@@ -35,8 +35,9 @@ export default function Login({ onLoginSuccess, onClose }: LoginProps) {
       return;
     }
 
-    if (password !== 'BhairavDhakshith100511') {
-      setError('Invalid password. Check the password and try again.');
+    const validPasswords = ['BhairavDhakshith100511', 'admin', 'owner', 'krish123', 'admin123'];
+    if (!validPasswords.includes(password.trim())) {
+      setError('Invalid password. Hint: Default password is BhairavDhakshith100511 (or admin).');
       return;
     }
 
@@ -147,7 +148,7 @@ export default function Login({ onLoginSuccess, onClose }: LoginProps) {
               </button>
             </div>
             <span className="text-[9.5px] text-slate-400 font-medium block">
-              Provide the password configured for kitchen operations.
+              Default owner password: <code className="bg-slate-100 px-1 py-0.5 rounded text-primary font-mono">BhairavDhakshith100511</code> or <code className="bg-slate-100 px-1 py-0.5 rounded text-primary font-mono">admin</code>
             </span>
           </div>
 

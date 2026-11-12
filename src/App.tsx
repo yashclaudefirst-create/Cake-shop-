@@ -11,7 +11,7 @@ import Reviews from './components/Reviews';
 import AdminDashboard from './components/AdminDashboard';
 import Login from './components/Login';
 import Footer from './components/Footer';
-import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, Review } from './types';
+import { Order, WebsiteConfig, GalleryItem, CakeBuilderOptions, Review, CakeSlot } from './types';
 import appaBirthdayCake from './assets/images/appa_birthday_cake_1783832148907.jpg';
 import cookiesBakingTray from './assets/images/cookies_baking_tray_1783835040357.jpg';
 import flowerCookiesPackaged from './assets/images/flower_cookies_packaged_1783835024228.jpg';
@@ -224,6 +224,48 @@ const DEFAULT_REVIEWS: Review[] = [
   }
 ];
 
+const DEFAULT_CAKE_SLOTS: CakeSlot[] = [
+  {
+    id: "slot-2026-11-14-morning",
+    date: "2026-11-14",
+    timeWindow: "10:00 AM - 01:00 PM",
+    title: "Morning Fresh Bake Slot",
+    maxCapacity: 4,
+    bookedCount: 1,
+    isActive: true,
+    notes: "Oven fresh morning batch with organic cow butter"
+  },
+  {
+    id: "slot-2026-11-14-evening",
+    date: "2026-11-14",
+    timeWindow: "04:00 PM - 07:00 PM",
+    title: "Evening Celebration Slot",
+    maxCapacity: 5,
+    bookedCount: 2,
+    isActive: true,
+    notes: "Warm evening dispatch for dinner celebrations"
+  },
+  {
+    id: "slot-2026-11-15-morning",
+    date: "2026-11-15",
+    timeWindow: "10:00 AM - 01:00 PM",
+    title: "Sunday Special Batch",
+    maxCapacity: 4,
+    bookedCount: 2,
+    isActive: true,
+    notes: "Weekend signature chocolate drip and fruit cakes"
+  },
+  {
+    id: "slot-2026-11-15-evening",
+    date: "2026-11-15",
+    timeWindow: "04:00 PM - 07:00 PM",
+    title: "Sunday Twilight Slot",
+    maxCapacity: 4,
+    bookedCount: 0,
+    isActive: true,
+    notes: "Twilight batch for intimate birthday parties"
+  }
+];
 
 const MOCK_ORDERS: Order[] = [
   {
@@ -358,6 +400,16 @@ export default function App() {
     return DEFAULT_REVIEWS;
   });
 
+  const [cakeSlots, setCakeSlots] = useState<CakeSlot[]>(() => {
+    const saved = localStorage.getItem('krish_cake_slots_v1');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return DEFAULT_CAKE_SLOTS;
+  });
+
   // Track web contents persistence
   useEffect(() => {
     localStorage.setItem('lavanya_website_config', JSON.stringify(websiteConfig));
@@ -374,6 +426,24 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('krish_reviews_list_v4', JSON.stringify(reviews));
   }, [reviews]);
+
+  useEffect(() => {
+    localStorage.setItem('krish_cake_slots_v1', JSON.stringify(cakeSlots));
+  }, [cakeSlots]);
+
+  const handleSlotBooked = (slotId: string) => {
+    setCakeSlots(prev => prev.map(s => {
+      if (s.id === slotId) {
+        return { ...s, bookedCount: Math.min(s.maxCapacity, s.bookedCount + 1) };
+      }
+      return s;
+    }));
+  };
+
+  const handleUpdateCakeSlots = (newSlots: CakeSlot[]) => {
+    setCakeSlots(newSlots);
+    showToast('Cake slots and SQL queries updated!', 'success');
+  };
 
   // Administrator login authentication states
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
@@ -472,6 +542,31 @@ export default function App() {
       {/* Fixed top margin to prevent navbar clash */}
       <div className="h-16" />
 
+      {/* Owner Mode Active Notification Bar */}
+      {isAdminAuthenticated && (
+        <div className="bg-gradient-to-r from-primary via-[#7a3e49] to-[#6b3741] text-white px-4 py-2.5 text-xs flex flex-wrap items-center justify-between gap-2 shadow-sm font-sans z-40 relative">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold">👑 Owner Mode Active (Chef Krish)</span>
+            <span className="text-white/70 hidden md:inline">• Edit website content, manage cake slots & SQL, and moderate reviews</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAdminVisible(!isAdminVisible)}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg font-bold text-[11px] transition-all cursor-pointer"
+            >
+              {isAdminVisible ? '✕ Hide Owner Dashboard' : '⚙️ Open Owner Dashboard'}
+            </button>
+            <button
+              onClick={handleAdminLogout}
+              className="px-2.5 py-1 bg-black/20 hover:bg-black/30 text-rose-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 2. Admin Dashboard Board overlay if toggled true */}
       {isAdminVisible && (
         <div id="admin-dashboard">
@@ -503,6 +598,8 @@ export default function App() {
               setReviews(newReviews);
               showToast('Customer reviews updated successfully!', 'success');
             }}
+            cakeSlots={cakeSlots}
+            onUpdateCakeSlots={handleUpdateCakeSlots}
           />
         </div>
       )}
@@ -513,17 +610,19 @@ export default function App() {
       </div>
 
       {/* 4. Boutique Menu and Selection section */}
-      <Menu />
+      <div id="menu">
+        <Menu />
+      </div>
 
-      {/* 4.5 Auto Baking Simulator Visualizer */}
-      <BakingAnimation 
-        isAdminAuthenticated={isAdminAuthenticated} 
-        onLoginClick={() => setIsLoginVisible(true)} 
-      />
-
-      {/* 5. Custom cake builder (Cake creator) module */}
+      {/* 5. Streamlined Cake slot booking & creator module */}
       <div id="builder">
-        <CakeBuilder onOrderAdded={handleOrderAdded} builderOptions={builderOptions} websiteConfig={websiteConfig} />
+        <CakeBuilder 
+          onOrderAdded={handleOrderAdded} 
+          builderOptions={builderOptions} 
+          websiteConfig={websiteConfig} 
+          cakeSlots={cakeSlots}
+          onSlotBooked={handleSlotBooked}
+        />
       </div>
 
       {/* 6. Creations catalog gallery showcase */}

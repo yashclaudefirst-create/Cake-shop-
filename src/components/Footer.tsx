@@ -46,29 +46,29 @@ export default function Footer({ onAdminToggle, onLinkClick, isAdminVisible }: F
               onClick={() => onLinkClick('home')}
               className="text-left text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
             >
-              Back to Home Peak
+              Home
             </button>
             <button 
               onClick={() => onLinkClick('builder')}
               className="text-left text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
             >
-              Interactive Cake Builder
+              Book a Cake Slot
             </button>
             <button 
               onClick={() => onLinkClick('gallery')}
               className="text-left text-on-surface-variant hover:text-primary transition-colors cursor-pointer"
             >
-              Gourmet Sweets Catalog
+              Creations Gallery
             </button>
             <button 
               onClick={onAdminToggle}
-              className={`text-left transition-all flex items-center gap-1 cursor-pointer font-bold ${
+              className={`text-left transition-all flex items-center gap-1.5 cursor-pointer font-bold ${
                 isAdminVisible 
                   ? 'text-primary underline' 
                   : 'text-on-surface-variant hover:text-primary'
               }`}
             >
-              <Lock size={12} className="text-primary shrink-0" /> Chef Owner Administration Board
+              <Lock size={12} className="text-primary shrink-0" /> Owner Access & SQL Portal
             </button>
           </div>
         </div>

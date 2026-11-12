@@ -1,5 +1,17 @@
 export type CategoryType = 'cake' | 'brownie' | 'cupcake' | 'muffin' | 'tres_leches' | 'cookies';
 
+export interface CakeSlot {
+  id: string; // e.g. "slot-2026-11-15-morning"
+  date: string; // YYYY-MM-DD
+  timeWindow: string; // e.g. "10:00 AM - 01:00 PM"
+  title: string; // e.g. "Morning Fresh Batch"
+  maxCapacity: number; // e.g. 4 cakes
+  bookedCount: number; // e.g. 1
+  isActive: boolean;
+  notes?: string;
+  createdAt?: string;
+}
+
 export interface CakeCustomization {
   category: CategoryType;
   shape: string; // "Classic Round", "Sweet Heart", "Modern Square"
@@ -16,6 +28,7 @@ export interface CakeCustomization {
   messageOnCake: string; // Up to 30 characters
   deliveryDate: string; // YYYY-MM-DD
   deliveryTimeSlot: string; // slot like "10:00 AM - 01:00 PM", etc.
+  slotId?: string; // ID of the booked CakeSlot
   specialInstructions: string; // free text textarea
 }
 
@@ -34,6 +47,7 @@ export interface Order {
   totalPrice: number;
   status: 'Received' | 'Preparing' | 'Baking' | 'Ready for Delivery' | 'Completed' | 'Cancelled';
   createdAt: string; // date string
+  slotId?: string;
 }
 
 export const STEP_NAMES = [
